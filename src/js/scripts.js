@@ -1,6 +1,6 @@
 
 // Web Sockets
-var exampleSocket = new WebSocket("wss://localhost/Computer-Science-ATAR/dist/server");
+var exampleSocket = new WebSocket("wss://localhost:8999");
 function initWS() {
     exampleSocket.send("Here's some text that the server is urgently awaiting!");
 }

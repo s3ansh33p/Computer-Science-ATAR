@@ -1,11 +1,11 @@
 /*!
 * Sean McGinty - Computer Science Project v0.0.1 (https://uat.seanmcginty.space/admin)
-* Copyright 2021-2021 Sean McGinty
+* Copyright 2021 Sean McGinty
 * Licensed under MIT (https://github.com/s3ansh33p/computer-science-atar/blob/master/LICENSE)
 */
 
 // Web Sockets
-var exampleSocket = new WebSocket("wss://localhost/Computer-Science-ATAR/dist/server");
+var exampleSocket = new WebSocket("wss://localhost:8999");
 function initWS() {
     exampleSocket.send("Here's some text that the server is urgently awaiting!");
 }

@@ -8,7 +8,7 @@ const sass = require('sass');
 const sh = require('shelljs');
 
 const stylesPath = '../src/scss/styles.scss';
-const destPath = upath.resolve(upath.dirname(__filename), '../dist/css/styles.css');
+const destPath = upath.resolve(upath.dirname(__filename), '../dist/public/css/styles.css');
 
 module.exports = function renderSCSS() {
     
@@ -35,7 +35,7 @@ module.exports = function renderSCSS() {
 
 const entryPoint = `/*!
 * Sean McGinty - ${packageJSON.title} v${packageJSON.version} (${packageJSON.homepage})
-* Copyright 2021-${new Date().getFullYear()} ${packageJSON.author}
+* Copyright ${new Date().getFullYear()} ${packageJSON.author}
 * Licensed under ${packageJSON.license} (https://github.com/s3ansh33p/${packageJSON.name}/blob/master/LICENSE)
 */
 @import "${stylesPath}"

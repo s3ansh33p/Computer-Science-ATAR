@@ -10,7 +10,7 @@
         "build:scss": "node scripts/build-scss.js",
         "clean": "node scripts/clean.js",
         "start": "npm run build && node scripts/start.js",
-        "start:debug": "npm run build && node scripts/start-debug.js"
+        "start:debug": "node scripts/start.js"
     },
     "description": "An admin system made with PHP and AJAX",
     "keywords": [
@@ -31,7 +31,8 @@
     "dependencies": {
         "bootstrap": "5.0.1",
         "debug": "^4.3.1",
-        "express": "^4.17.1"
+        "express": "^4.17.1",
+        "ws": "^7.4.6"
     },
     "devDependencies": {
         "autoprefixer": "10.2.6",
