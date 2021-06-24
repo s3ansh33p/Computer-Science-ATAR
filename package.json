@@ -3,9 +3,9 @@
     "name": "computer-science-atar",
     "version": "0.0.1",
     "scripts": {
-        "build": "npm run clean && npm run build:scss && npm run build:scripts && npm run build:assets && npm run build:php",
+        "build": "npm run clean && npm run build:scss && npm run build:scripts && npm run build:assets && npm run build:main",
         "build:assets": "node scripts/build-assets.js",
-        "build:php": "node scripts/build-php.js",
+        "build:main": "node scripts/build-main.js",
         "build:scripts": "node scripts/build-scripts.js",
         "build:scss": "node scripts/build-scss.js",
         "clean": "node scripts/clean.js",
@@ -30,7 +30,8 @@
     },
     "dependencies": {
         "bootstrap": "5.0.1",
-        "debug": "^4.3.1"
+        "debug": "^4.3.1",
+        "express": "^4.17.1"
     },
     "devDependencies": {
         "autoprefixer": "10.2.6",

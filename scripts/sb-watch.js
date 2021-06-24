@@ -6,7 +6,6 @@ const upath = require('upath');
 const renderAssets = require('./render-assets');
 const renderScripts = require('./render-scripts');
 const renderSCSS = require('./render-scss');
-const renderPHP = require('./render-php');
 
 const watcher = chokidar.watch('src', {
     persistent: true,
@@ -37,13 +36,6 @@ function _processFile(filePath, watchEvent) {
         return;
     }
 
-    if (filePath.match(/\.php$/)) {
-        if (watchEvent === 'change') {
-            return _handlePHP(filePath, watchEvent);
-        }
-        return;
-    }
-
     if (filePath.match(/src\/js\//)) {
         return renderScripts();
     }
@@ -56,8 +48,4 @@ function _processFile(filePath, watchEvent) {
 
 function _handleSCSS() {
     renderSCSS();
-}
-
-function _handlePHP() {
-    renderPHP();
 }

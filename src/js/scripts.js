@@ -1,3 +1,16 @@
+
+// Web Sockets
+var exampleSocket = new WebSocket("wss://localhost/Computer-Science-ATAR/dist/server");
+function initWS() {
+    exampleSocket.send("Here's some text that the server is urgently awaiting!");
+}
+
+exampleSocket.onmessage = function (event) {
+    console.log(event.data);
+}
+
+
+// UI
 window.addEventListener('DOMContentLoaded', event => {
 
     // Toggle the side navigation
