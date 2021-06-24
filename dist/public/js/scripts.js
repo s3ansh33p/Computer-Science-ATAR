@@ -5,13 +5,43 @@
 */
 
 // Web Sockets
-var exampleSocket = new WebSocket("wss://localhost:8999");
-function initWS() {
-    exampleSocket.send("Here's some text that the server is urgently awaiting!");
+var server = new WebSocket("ws://localhost:8999");
+function sendData(data) {
+    server.send(JSON.stringify(data));
 }
 
-exampleSocket.onmessage = function (event) {
+server.onmessage = function (event) {
     console.log(event.data);
+    if (JSON.parse(event.data).type == "pong") {
+        pong();
+    }
+}
+
+function ping() {
+    sendData({'type': 'ping'})
+    tm = setTimeout(function () {
+       console.log('Connection Timed Out')
+    }, 5000);
+}
+
+function pong() {
+    clearTimeout(tm);
+}
+
+server.onopen = function () {
+    setInterval(ping, 15000);
+}
+
+let packet = {
+    'data':{
+        'player': {
+            'x':10,
+            'y':5,
+            'z':23,
+            'hasFlag':false
+        }
+    },
+    'type': 'updatePlayer'
 }
 
 

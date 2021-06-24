@@ -3,7 +3,7 @@ const fs = require('fs');
 const upath = require('upath');
 const sh = require('shelljs');
 
-module.exports = function renderPHP() {
+module.exports = function renderMain() {
     const sourcePath = upath.resolve(upath.dirname(__filename), '../src/views');
     const destPath = upath.resolve(upath.dirname(__filename), '../dist/.');
     
