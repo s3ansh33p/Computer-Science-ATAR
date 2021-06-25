@@ -1,14 +1,17 @@
 
-// Web Sockets
+// Networking
 var server = new WebSocket("ws://localhost:8999");
 function sendData(data) {
     server.send(JSON.stringify(data));
 }
 
 server.onmessage = function (event) {
-    console.log(event.data);
     if (JSON.parse(event.data).type == "pong") {
         pong();
+    } else if (JSON.parse(event.data).type == "broadcast") {
+        console.log(event.data);
+    } else if (JSON.parse(event.data).type == "activePlayers") {
+        console.log("Active Players: %s", event.data);
     }
 }
 
@@ -29,14 +32,12 @@ server.onopen = function () {
 
 let packet = {
     'data':{
-        'player': {
-            'x':10,
-            'y':5,
-            'z':23,
-            'hasFlag':false
-        }
+        'x':10,
+        'y':5,
+        'z':23,
+        'hasFlag':false
     },
-    'type': 'updatePlayer'
+    'type': 'playerUpdate'
 }
 
 
