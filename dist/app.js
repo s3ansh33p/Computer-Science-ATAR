@@ -5,9 +5,18 @@ const path = require('path');
 const { active } = require('browser-sync');
 const app = express();
 const port = 3000;
+const mysql = require('serverless-mysql')({
+    config: {
+      host     : process.env.ENDPOINT,
+      database : process.env.DATABASE,
+      user     : process.env.USERNAME,
+      password : process.env.PASSWORD
+    }
+  })
 
 // Routing for static files such as the css styling
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, '../node_modules/three')));
 
 // Web Socket
 const server = http.createServer(app);
@@ -81,6 +90,15 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '/views/login.html'));
 })
 
+app.get('/game', (req, res) => {
+    res.sendFile(path.join(__dirname, '/views/game.html'));
+})
+
+app.get('/api/players', (req, res) => {
+    res.json({'players':JSON.stringify(_dbGetPlayers())});
+})
+
+
 app.all((req,res) => {
     res.send(`Req: ${req}`)
 })
@@ -88,3 +106,11 @@ app.all((req,res) => {
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`)
 })
+
+async function _dbGetPlayers() {
+        // https://github.com/jeremydaly/serverless-mysql
+        let results = await mysql.query('SELECT * FROM players')
+        // Run clean up function
+        await mysql.end();
+        return results;
+}
