@@ -4,14 +4,40 @@ var server = new WebSocket("ws://localhost:8999");
 function sendData(data) {
     server.send(JSON.stringify(data));
 }
+let clientID = 0;
+let otherPlayers = [];
 
 server.onmessage = function (event) {
     if (JSON.parse(event.data).type == "pong") {
         pong();
     } else if (JSON.parse(event.data).type == "broadcast") {
         console.log(event.data);
+        if (otherPlayers.length != 0) {
+            let index = otherPlayers.findIndex(obj => obj.client == JSON.parse(event.data).data.client);
+            if (index != -1) { // checks if the player exists
+                otherPlayers[index] = JSON.parse(event.data).data.playerData;
+                otherPlayers[index].client = JSON.parse(event.data).data.client;
+            }
+        }
+    } else if (JSON.parse(event.data).type == "connection") {
+        // console.log(event.data);
+        clientID = JSON.parse(event.data).data;
     } else if (JSON.parse(event.data).type == "activePlayers") {
-        console.log("Active Players: %s", event.data);
+        // console.log("Active Players: %s", event.data);
+        otherPlayers = []; // Defined in game.js
+        for (let i=0; i<JSON.parse(event.data).data.length; i++) {
+            if (JSON.parse(event.data).data[i].client != clientID) {
+                console.log(JSON.parse(event.data).data[i])
+                otherPlayers.push({ 
+                    'x':0,
+                    'y':0,
+                    'z':0,
+                    'rotation': 0,
+                    'hasFlag': false,
+                    'client': JSON.parse(event.data).data[i].client
+                })
+            }
+        }
     }
 }
 
@@ -19,6 +45,7 @@ function ping() {
     sendData({'type': 'ping'})
     tm = setTimeout(function () {
        console.log('Connection Timed Out')
+       server.close();
     }, 5000);
 }
 
@@ -35,6 +62,7 @@ let packet = {
         'x':10,
         'y':5,
         'z':23,
+        'rotation': 0,
         'hasFlag':false
     },
     'type': 'playerUpdate'

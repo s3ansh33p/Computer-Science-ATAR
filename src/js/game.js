@@ -5,7 +5,8 @@ import { Octree } from '../examples/jsm/math/Octree.js';
 import { Capsule } from '../examples/jsm/math/Capsule.js';
 
 const playerData = {
-    position: {'x':0, 'y':0, 'z':0}
+    position: {'x':0, 'y':0, 'z':0},
+    rotation: 0
 }
 
 const playerPrecision = 100;
@@ -317,12 +318,6 @@ function controls( deltaTime ) {
 
 }
 
-// Testing Cube
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
-
 const loader = new GLTFLoader().setPath( './assets/models/' );
 
 loader.load( 'map.glb', ( gltf ) => {
@@ -352,16 +347,39 @@ loader.load( 'map.glb', ( gltf ) => {
 
 } );
 
+// Testing Cube
+const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+const cube = new THREE.Mesh( geometry, material );
+scene.add( cube );
+
 function transferData() {
-    if (Math.round(camera.position.x*playerPrecision)/playerPrecision != playerData.position.x || Math.round(camera.position.y*playerPrecision)/playerPrecision != playerData.position.y || Math.round(camera.position.z*playerPrecision)/playerPrecision != playerData.position.z) {
+    // Render received data
+    for (let i=0; i<otherPlayers.length; i++) {
+        cube.position.set(otherPlayers[i].x || 0, otherPlayers[i].y || 0, otherPlayers[i].z || 0);
+        cube.rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
+    }
+
+    // Send client packets to the server
+    camera.getWorldDirection(playerDirection);
+    if (Math.round(camera.position.x*playerPrecision)/playerPrecision != playerData.position.x || Math.round(camera.position.y*playerPrecision)/playerPrecision != playerData.position.y || Math.round(camera.position.z*playerPrecision)/playerPrecision != playerData.position.z || Math.round(THREE.Math.radToDeg( Math.atan2(playerDirection.x,playerDirection.z) )*playerPrecision)/playerPrecision != playerData.rotation) {
         playerData.position = {
             'x': Math.round(camera.position.x*playerPrecision)/playerPrecision,
             'y': Math.round(camera.position.y*playerPrecision)/playerPrecision,
             'z': Math.round(camera.position.z*playerPrecision)/playerPrecision
         }
-        // cube.translateX(0.000001)
+        playerData.rotation = Math.round(THREE.Math.radToDeg( Math.atan2(playerDirection.x,playerDirection.z) )*playerPrecision)/playerPrecision;
 
-        cube.position.set(playerData.position.x+1 || 0+1, playerData.position.y || 0, playerData.position.z || 0)
+        sendData({
+            'data':{
+                'x':playerData.position.x || 0,
+                'y':playerData.position.y || 0,
+                'z':playerData.position.z || 0,
+                'rotation': playerData.rotation,
+                'hasFlag':false
+            },
+            'type': 'playerUpdate'
+        })
     }
 }
 

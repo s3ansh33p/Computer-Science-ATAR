@@ -29,6 +29,7 @@ wss.on('connection', (ws) => {
         'x':10,
         'y':5,
         'z':23,
+        'rotation': 0,
         'hasFlag':false
     }
     ws.userData = {
@@ -52,7 +53,7 @@ wss.on('connection', (ws) => {
     });
 
     // Broadcast new users joining
-    ws.send(JSON.stringify({'data':'Connected to the server','type':'connection'}));
+    ws.send(JSON.stringify({'data':ws.id,'type':'connection'}));
     let activePlayers = [];
     wss.clients.forEach(function each(client) {
         activePlayers.push({'client':client.id,'username':client.userData.username, 'team':client.userData.team})
