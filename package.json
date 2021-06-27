@@ -32,7 +32,6 @@
         "bootstrap": "5.0.1",
         "debug": "^4.3.1",
         "express": "^4.17.1",
-        "serverless-mysql": "^1.5.4",
         "three": "^0.129.0",
         "ws": "^7.4.6"
     },
