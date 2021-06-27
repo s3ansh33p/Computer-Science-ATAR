@@ -41,7 +41,7 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
 
         // Log the received message and send it back to the client
-        console.log('Received from '+ws.id+': %s', JSON.stringify(message));
+        // console.log('Received from '+ws.id+': %s', JSON.stringify(message));
         // wss.broadcast(`Hello, you sent -> ${message}`);
         if (JSON.parse(message).type == undefined) return;
         if (JSON.parse(message).type == 'ping') {
@@ -49,7 +49,9 @@ wss.on('connection', (ws) => {
         } else if (JSON.parse(message).type == 'playerUpdate') {
             ws.playerData = JSON.parse(message).data;
             wss.broadcast({'playerData':JSON.parse(message).data,'client':ws.id})
-        }
+        } else if (JSON.parse(message).type == 'chatMessage') {
+            wss.broadcast({'message':JSON.parse(message).data,'client':ws.id}, "chat")
+        } 
     });
 
     // Broadcast new users joining
@@ -59,10 +61,11 @@ wss.on('connection', (ws) => {
         activePlayers.push({'client':client.id,'username':client.userData.username, 'team':client.userData.team})
      });
     wss.broadcast(activePlayers, "activePlayers")
+    // On active players, send positions?
 });
 
 wss.broadcast = function broadcast(msg, type="broadcast") {
-    console.log(msg);
+    // console.log(msg);
     wss.clients.forEach(function each(client) {
         client.send(JSON.stringify({'data':msg,'type':type}));
      });

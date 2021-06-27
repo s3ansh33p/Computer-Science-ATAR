@@ -6,6 +6,7 @@ function sendData(data) {
 }
 let clientID = 0;
 let otherPlayers = [];
+let typing = false;
 
 server.onmessage = function (event) {
     if (JSON.parse(event.data).type == "pong") {
@@ -22,6 +23,8 @@ server.onmessage = function (event) {
     } else if (JSON.parse(event.data).type == "connection") {
         // console.log(event.data);
         clientID = JSON.parse(event.data).data;
+    } else if (JSON.parse(event.data).type == "chat") {
+        console.log(event.data);
     } else if (JSON.parse(event.data).type == "activePlayers") {
         // console.log("Active Players: %s", event.data);
         otherPlayers = []; // Defined in game.js
@@ -67,7 +70,6 @@ let packet = {
     },
     'type': 'playerUpdate'
 }
-
 
 // UI
 window.addEventListener('DOMContentLoaded', event => {

@@ -307,6 +307,22 @@ body.center {
         z-index: 1; /* TODO Solve this in HTML */
     }
     
+    #chat {
+        position: absolute;
+        top: 45px;
+        width: 200px;
+        padding: 8px;
+        box-sizing: border-box;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        pointer-events: none;
+        line-height: 15px;
+        overflow-wrap: anywhere;
+        z-index: 1; /* TODO Solve this in HTML */
+    }
+    
     a, button, input, select {
         pointer-events: auto;
     }

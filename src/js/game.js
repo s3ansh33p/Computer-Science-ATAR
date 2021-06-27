@@ -280,38 +280,28 @@ function getSideVector() {
 
 function controls( deltaTime ) {
 
-    const speed = 25;
+    const speed = 60;
 
-    if ( playerOnFloor ) {
+    if ( playerOnFloor && !typing ) {
 
         if ( keyStates[ 'KeyW' ] ) {
-
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );
-
         }
 
         if ( keyStates[ 'KeyS' ] ) {
-
             playerVelocity.add( getForwardVector().multiplyScalar( - speed * deltaTime ) );
-
         }
 
         if ( keyStates[ 'KeyA' ] ) {
-
             playerVelocity.add( getSideVector().multiplyScalar( - speed * deltaTime ) );
-
         }
 
         if ( keyStates[ 'KeyD' ] ) {
-
             playerVelocity.add( getSideVector().multiplyScalar( speed * deltaTime ) );
-
         }
 
         if ( keyStates[ 'Space' ] ) {
-
             playerVelocity.y = 15;
-
         }
 
     }
@@ -320,7 +310,7 @@ function controls( deltaTime ) {
 
 const loader = new GLTFLoader().setPath( './assets/models/' );
 
-loader.load( 'map.glb', ( gltf ) => {
+loader.load( 'scene.glb', ( gltf ) => {
 
     scene.add( gltf.scene );
 

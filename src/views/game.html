@@ -8,6 +8,15 @@
 	</head>
 	<body>
 		<div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.</div>
+		<div id="chat">
+			<div id="chat-msg"><span class="text-warning">User: </span>Hello World</div>
+			<div id="chat-msg"><span class="text-warning">User: </span>Hello World</div>
+			<div id="chat-msg"><span class="text-warning">User: </span>Hello World</div>
+			<div id="chat-msg"><span class="text-warning">User: </span>Hello World</div>
+			<form action="javascript:;">
+				<input id="chat-input" type="text" class="input" name="message">
+			</form>
+		</div>
 		<div id="container"></div>
         <script type="importmap">
             {
@@ -16,6 +25,24 @@
               }
             }
         </script>
+		<script>
+			// Chat Typing
+			document.addEventListener('keyup',function(e){
+				if (e.code == "KeyY" && !typing) { // Change KeyY to be configurable in a menu
+					document.getElementById('chat-input').value = "";
+					typing = true
+					document.getElementById('chat-input').focus();
+				} else if (e.code == "Enter" && typing) {
+					document.getElementById('chat-input').blur();
+					typing = false;
+					sendData({
+						'data':document.getElementById('chat-input').value,
+						'type': 'chatMessage'
+					})
+					document.getElementById('chat-input').value = "";
+				}
+			})
+		</script>
 		<script src="../js/scripts.js"></script>
 		<script src="../js/game.js"type="module"></script>
 	</body>
