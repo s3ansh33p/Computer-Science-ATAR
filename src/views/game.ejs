@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" id="gamewin">
+	<head>
+		<title>Computer Science Game</title>
+		<meta charset=utf-8 />
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="../css/styles.css">
+	</head>
+	<body>
+		<div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.</div>
+		<div id="chat">
+			<div id="chat-msg-container"></div>
+			<form action="javascript:;">
+				<input id="chat-input" placeholder="Chat" type="text" class="input" name="message">
+			</form>
+		</div>
+		<div id="container"></div>
+        <script type="importmap">
+            {
+              "imports": {
+                "three": "./build/three.module.js"
+              }
+            }
+        </script>
+		<script src="../js/scripts.js"></script>
+		<script src="../js/game.js"type="module"></script>
+	</body>
+</html>

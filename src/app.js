@@ -2,13 +2,13 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-const { active } = require('browser-sync');
 const app = express();
 const port = 3000;
 
 // Routing for static files such as the css styling
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(path.join(__dirname, '../node_modules/three')));
+app.set('view engine', 'ejs');
 
 // Web Socket
 const server = http.createServer(app);
@@ -79,15 +79,21 @@ server.listen(8999, () => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/index.html'));
+    res.render(path.join(__dirname, '/views/index'), {
+        title: 'Home'
+    });
 })
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/login.html'));
+    res.render(path.join(__dirname, '/views/login'));
 })
 
 app.get('/game', (req, res) => {
-    res.sendFile(path.join(__dirname, '/views/game.html'));
+    res.render(path.join(__dirname, '/views/game'));
+})
+
+app.get('/shop', (req, res) => {
+    res.render(path.join(__dirname, '/views/shop'));
 })
 
 app.get('/api/players', (req, res) => {

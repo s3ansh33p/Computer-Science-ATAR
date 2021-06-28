@@ -25,6 +25,11 @@ server.onmessage = function (event) {
         clientID = JSON.parse(event.data).data;
     } else if (JSON.parse(event.data).type == "chat") {
         console.log(event.data);
+        const chatContainer = document.getElementById('chat-msg-container');
+        chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${JSON.parse(event.data).data.client}: </span>${JSON.parse(event.data).data.message}</div></div>` + chatContainer.innerHTML;
+        if (chatContainer.children.length > 20) {
+            chatContainer.children[20].remove();
+        }
     } else if (JSON.parse(event.data).type == "activePlayers") {
         // console.log("Active Players: %s", event.data);
         otherPlayers = []; // Defined in game.js
@@ -70,6 +75,25 @@ let packet = {
     },
     'type': 'playerUpdate'
 }
+
+// Chat
+document.addEventListener('keyup',function(e){
+    if (e.code == "KeyY" && !typing) { // Change KeyY to be configurable in a menu
+        document.getElementById('chat-input').value = "";
+        typing = true
+        document.getElementById('chat-input').focus();
+    } else if (e.code == "Enter" && typing) {
+        document.getElementById('chat-input').blur();
+        typing = false;
+        if (document.getElementById('chat-input').value != "") {
+            sendData({
+                'data':document.getElementById('chat-input').value,
+                'type': 'chatMessage'
+            })
+            document.getElementById('chat-input').value = "";
+        }
+    }
+})
 
 // UI
 window.addEventListener('DOMContentLoaded', event => {

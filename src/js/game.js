@@ -341,13 +341,17 @@ loader.load( 'scene.glb', ( gltf ) => {
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
 const cube = new THREE.Mesh( geometry, material );
+const cube2 = new THREE.Mesh( geometry, material );
 scene.add( cube );
+scene.add( cube2 );
 
 function transferData() {
     // Render received data
+    let cubes = [cube, cube2]
     for (let i=0; i<otherPlayers.length; i++) {
-        cube.position.set(otherPlayers[i].x || 0, otherPlayers[i].y || 0, otherPlayers[i].z || 0);
-        cube.rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
+        
+        cubes[i].position.set(otherPlayers[i].x || 0, otherPlayers[i].y || 0, otherPlayers[i].z || 0);
+        cubes[i].rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
     }
 
     // Send client packets to the server

@@ -319,8 +319,53 @@ body.center {
         user-select: none;
         pointer-events: none;
         line-height: 15px;
-        overflow-wrap: anywhere;
-        z-index: 1; /* TODO Solve this in HTML */
+        z-index: 1;
+
+        #chat-input {
+            background: none;
+            border: 2px solid black;
+            color: white;
+        }
+
+        #chat-msg-container {
+            transform: rotate(180deg);
+            direction: rtl;
+            height: 400px;
+            overflow: hidden;
+
+            .chat-wrapper {
+
+                position: relative;
+
+                &:first-child {
+                    animation-name: slideIn;
+                    animation-duration: 0.4s;
+                    animation-fill-mode: forwards;
+                    left: 240px;
+
+                    @keyframes slideIn{
+                        0% {
+                            left: 240px;
+                        }
+                        100% {
+                            left: 0px;
+                        }
+                    }
+                }
+                
+                .chat-msg {
+                    transform: rotate(180deg);
+                    direction: ltr;
+                    overflow-wrap: anywhere;
+                    position: relative;
+
+                    span {
+                        color: yellow;
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
     }
     
     a, button, input, select {
@@ -369,3 +414,21 @@ body.center {
         padding: 10px;
     }
 }
+
+input:focus-visible {
+    outline: none;
+}
+
+::placeholder { 
+    color: white;
+    opacity: 1;
+}
+
+:-ms-input-placeholder {
+    color: white;
+}
+
+::-ms-input-placeholder 
+{
+    color: white;
+} 
