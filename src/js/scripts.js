@@ -12,7 +12,7 @@ server.onmessage = function (event) {
     if (JSON.parse(event.data).type == "pong") {
         pong();
     } else if (JSON.parse(event.data).type == "broadcast") {
-        console.log(event.data);
+        // console.log(event.data);
         if (otherPlayers.length != 0) {
             let index = otherPlayers.findIndex(obj => obj.client == JSON.parse(event.data).data.client);
             if (index != -1) { // checks if the player exists

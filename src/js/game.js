@@ -280,7 +280,7 @@ function getSideVector() {
 
 function controls( deltaTime ) {
 
-    const speed = 60;
+    const speed = 30;
 
     if ( playerOnFloor && !typing ) {
 
@@ -337,6 +337,16 @@ loader.load( 'scene.glb', ( gltf ) => {
 
 } );
 
+let AK = 0;
+loader.load( 'gun.glb', ( gltf ) => {
+
+    AK = gltf.scene;
+    scene.add( AK );
+    AK.position.set(3,1,4);
+    AK.scale.set(0.08,0.08,0.08);
+
+} );
+
 // Testing Cube
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
@@ -362,8 +372,17 @@ function transferData() {
             'y': Math.round(camera.position.y*playerPrecision)/playerPrecision,
             'z': Math.round(camera.position.z*playerPrecision)/playerPrecision
         }
-        playerData.rotation = Math.round(THREE.Math.radToDeg( Math.atan2(playerDirection.x,playerDirection.z) )*playerPrecision)/playerPrecision;
+        const camRotation = THREE.Math.radToDeg( Math.atan2(playerDirection.x,playerDirection.z) );
+        playerData.rotation = Math.round(camRotation*playerPrecision)/playerPrecision;
+        if (AK != 0) {
+            AK.position.set(camera.position.x+Math.sin(THREE.Math.degToRad(camRotation))*0.5,
+                            camera.position.y-0.2,
+                            camera.position.z+Math.cos(THREE.Math.degToRad(camRotation))*0.5
+                            );
+            AK.rotation.set(0, THREE.Math.degToRad(270+camRotation), 0)
+        }
 
+        document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
         sendData({
             'data':{
                 'x':playerData.position.x || 0,
