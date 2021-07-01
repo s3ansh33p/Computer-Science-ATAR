@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const path = require('path');
 const app = express();
 const port = 3000;
+const wsport = 8999;
 
 // Routing for static files such as the css styling
 app.use(express.static(__dirname + '/public'));
@@ -18,9 +19,9 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
     ws.id = wss.generateID();
     ws.playerData = {
-        'x':10,
-        'y':5,
-        'z':23,
+        'x':0,
+        'y':0,
+        'z':0,
         'rotation': 0,
         'hasFlag':false
     }
@@ -74,7 +75,7 @@ wss.broadcast = function broadcast(msg, type="broadcast") {
   }
 
 //start our server
-server.listen(8999, () => {
+server.listen(wsport, () => {
     console.log(`Server started on localhost:${server.address().port}`);
 });
 

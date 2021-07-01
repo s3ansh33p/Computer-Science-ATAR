@@ -13,7 +13,7 @@ module.exports = function renderScripts() {
 
     const sourcePathScriptsJS = upath.resolve(upath.dirname(__filename), '../src/js/scripts.js');
     const destPathScriptsJS = upath.resolve(upath.dirname(__filename), '../dist/public/js/scripts.js');
-    
+
     const copyright = `/*!
 * Sean McGinty - ${packageJSON.title} v${packageJSON.version} (${packageJSON.homepage})
 * Copyright ${new Date().getFullYear()} ${packageJSON.author}

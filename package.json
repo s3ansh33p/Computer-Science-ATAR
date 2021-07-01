@@ -21,12 +21,12 @@
         "theme",
         "template"
     ],
-    "homepage": "https://uat.seanmcginty.space/admin",
+    "homepage": "https://dev.seanmcginty.space",
     "license": "MIT",
     "author": "Sean McGinty",
     "repository": {
         "type": "git",
-        "url": "https://github.com/s3ansh33p/Admin-Panel.git"
+        "url": "https://github.com/s3ansh33p/computer-science-atar"
     },
     "dependencies": {
         "bootstrap": "5.0.1",

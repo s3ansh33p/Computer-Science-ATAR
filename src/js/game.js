@@ -4,10 +4,17 @@ import { GLTFLoader } from '../examples/jsm/loaders/GLTFLoader.js';
 import { Octree } from '../examples/jsm/math/Octree.js';
 import { Capsule } from '../examples/jsm/math/Capsule.js';
 
-const playerData = {
+// Default playerData
+let playerData = {
     position: {'x':0, 'y':0, 'z':0},
     rotation: 0
 }
+
+// A manager for the loading screen
+var manager = new THREE.LoadingManager();
+manager.onProgress = function ( item, loaded, total ) {
+  console.log((loaded / total * 100) + '%');
+};
 
 const playerPrecision = 100;
 
@@ -109,7 +116,7 @@ document.addEventListener( 'keyup', ( event ) => {
 
 document.addEventListener( 'mousedown', () => {
 
-    document.body.requestPointerLock();
+    if (inGame) document.body.requestPointerLock();
 
 } );
 
@@ -308,7 +315,17 @@ function controls( deltaTime ) {
 
 }
 
-const loader = new GLTFLoader().setPath( './assets/models/' );
+const loader = new GLTFLoader(manager).setPath( './assets/models/' );
+
+let AK = 0;
+loader.load( 'gun.glb', ( gltf ) => {
+
+    AK = gltf.scene;
+    scene.add( AK );
+    AK.position.set(3,1,4);
+    AK.scale.set(0.08,0.08,0.08);
+
+} );
 
 loader.load( 'scene.glb', ( gltf ) => {
 
@@ -337,16 +354,6 @@ loader.load( 'scene.glb', ( gltf ) => {
 
 } );
 
-let AK = 0;
-loader.load( 'gun.glb', ( gltf ) => {
-
-    AK = gltf.scene;
-    scene.add( AK );
-    AK.position.set(3,1,4);
-    AK.scale.set(0.08,0.08,0.08);
-
-} );
-
 // Testing Cube
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
@@ -357,6 +364,7 @@ scene.add( cube2 );
 
 function transferData() {
     // Render received data
+    if (!connectedToServer) return;
     let cubes = [cube, cube2]
     for (let i=0; i<otherPlayers.length; i++) {
         

@@ -1,12 +1,32 @@
 
 // Networking
 var server = new WebSocket("ws://localhost:8999");
+// var server = new WebSocket("ws://socket.seanmcginty.space");
 function sendData(data) {
     server.send(JSON.stringify(data));
 }
 let clientID = 0;
 let otherPlayers = [];
 let typing = false;
+let connectedToServer = false;
+let inGame = false;
+
+var timers = {};
+function timer(name) {
+    timers[name + '_start'] = window.performance.now();
+}
+
+function timerEnd(name) {
+    if (!timers[name + '_start']) return undefined;
+    var time = window.performance.now() - timers[name + '_start'];
+    var amount = timers[name + '_amount'] = timers[name + '_amount'] ? timers[name + '_amount'] + 1 : 1;
+    var sum = timers[name + '_sum'] = timers[name + '_sum'] ? timers[name + '_sum'] + time : time;
+    timers[name + '_avg'] = sum / amount;
+    delete timers[name + '_start'];
+    return time;
+}
+
+timer('connectionMS');
 
 server.onmessage = function (event) {
     if (JSON.parse(event.data).type == "pong") {
@@ -22,6 +42,9 @@ server.onmessage = function (event) {
         }
     } else if (JSON.parse(event.data).type == "connection") {
         // console.log(event.data);
+        connectedToServer = true;
+        const conMS = Math.round(timerEnd('connectionMS')*100)/100;
+        document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p><button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
         clientID = JSON.parse(event.data).data;
     } else if (JSON.parse(event.data).type == "chat") {
         console.log(event.data);
@@ -50,11 +73,14 @@ server.onmessage = function (event) {
 }
 
 function ping() {
-    sendData({'type': 'ping'})
-    tm = setTimeout(function () {
-       console.log('Connection Timed Out')
-       server.close();
-    }, 5000);
+    if (connectedToServer) {
+        sendData({'type': 'ping'})
+        tm = setTimeout(function () {
+        console.log('Connection Timed Out')
+        connectedToServer = false;
+        server.close();
+        }, 5000);
+    }
 }
 
 function pong() {
@@ -94,6 +120,21 @@ document.addEventListener('keyup',function(e){
         }
     }
 })
+
+// Load UI
+function joinGame() {
+
+    document.getElementById('loader').classList.add('fade');
+
+    setTimeout(() => {
+        inGame = true;
+    }, 400);
+
+    setTimeout(() => {
+        document.getElementById('loader').remove();
+    }, 2500);
+
+}
 
 // UI
 window.addEventListener('DOMContentLoaded', event => {
