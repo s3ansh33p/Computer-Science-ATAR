@@ -1,14 +1,14 @@
 
 // Networking
 var server = new WebSocket("ws://localhost:8999");
-// var server = new WebSocket("ws://socket.seanmcginty.space");
+// var server = new WebSocket("wss://socket.seanmcginty.space");
 function sendData(data) {
     server.send(JSON.stringify(data));
 }
 let clientID = 0;
 let otherPlayers = [];
 let typing = false;
-let connectedToServer = false;
+let connectedToServer = false; // Potentially store this and status info in one variable. Like status = 1 | 2 | 3 ... 'connected', 'ingame', 'disconnected' etc
 let inGame = false;
 
 var timers = {};
@@ -44,7 +44,7 @@ server.onmessage = function (event) {
         // console.log(event.data);
         connectedToServer = true;
         const conMS = Math.round(timerEnd('connectionMS')*100)/100;
-        document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p><button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
+        document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
         clientID = JSON.parse(event.data).data;
     } else if (JSON.parse(event.data).type == "chat") {
         console.log(event.data);
@@ -135,22 +135,3 @@ function joinGame() {
     }, 2500);
 
 }
-
-// UI
-window.addEventListener('DOMContentLoaded', event => {
-
-    // Toggle the side navigation
-    const sidebarToggle = document.body.querySelector('#sidebarToggle');
-    if (sidebarToggle) {
-        // Uncomment Below to persist sidebar toggle between refreshes
-        // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
-        //     document.body.classList.toggle('sb-sidenav-toggled');
-        // }
-        sidebarToggle.addEventListener('click', event => {
-            event.preventDefault();
-            document.body.classList.toggle('sb-sidenav-toggled');
-            localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
-        });
-    }
-
-});

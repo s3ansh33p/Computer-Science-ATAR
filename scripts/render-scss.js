@@ -17,6 +17,7 @@ module.exports = function renderSCSS() {
         includePaths: [
             upath.resolve(upath.dirname(__filename), '../node_modules')
         ],
+        outputStyle: "compressed"
       });
 
     const destPathDirname = upath.dirname(destPath);
@@ -38,5 +39,6 @@ const entryPoint = `/*!
 * Copyright ${new Date().getFullYear()} ${packageJSON.author}
 * Licensed under ${packageJSON.license} (https://github.com/s3ansh33p/${packageJSON.name}/blob/master/LICENSE)
 */
+
 @import "${stylesPath}"
 `

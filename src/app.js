@@ -86,15 +86,21 @@ app.get('/', (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-    res.render(path.join(__dirname, '/views/login'));
+    res.render(path.join(__dirname, '/views/login'), {
+        title: 'Login'
+    });
 })
 
 app.get('/game', (req, res) => {
-    res.render(path.join(__dirname, '/views/game'));
+    res.render(path.join(__dirname, '/views/game'), {
+        title: 'Game'
+    });
 })
 
 app.get('/shop', (req, res) => {
-    res.render(path.join(__dirname, '/views/shop'));
+    res.render(path.join(__dirname, '/views/shop'), {
+        title: 'Shop'
+    });
 })
 
 app.get('/api/players', (req, res) => {
@@ -103,9 +109,12 @@ app.get('/api/players', (req, res) => {
 })
 
 
-app.all((req,res) => {
-    res.send(`Req: ${req}`)
-})
+//The 404 Route
+app.get('*', (req, res) => {
+    res.status(404).render(path.join(__dirname, '/views/404'), {
+        title: '404'
+    })
+});
 
 app.listen(port, () => {
   console.log(`Listening at localhost:${port}`)

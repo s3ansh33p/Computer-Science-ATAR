@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" id="gamewin">
-	<head>
-		<title>Computer Science Game</title>
-		<meta charset=utf-8 />
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link type="text/css" rel="stylesheet" href="../css/styles.css">
-	</head>
+
+    <%- include('./components/header.ejs'); %>
+    
 	<body>
-		<div id="loader"><p class="loading-text">Connecting to server...</p><div class="loading-bar"></div></div>
+		<div id="loader">
+			<p class="loading-text">Connecting to server...</p>
+			<div class="loading-bar">
+				<div class="loading-inner-bar"></div>
+			</div>
+			<p class="loading-item">Loading...</p>
+		</div>
 		<!-- https://codepen.io/Boogiesox/pen/MYbWrj -->
 		<div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div>
 		<div id="chat">

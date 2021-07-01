@@ -13,7 +13,11 @@ let playerData = {
 // A manager for the loading screen
 var manager = new THREE.LoadingManager();
 manager.onProgress = function ( item, loaded, total ) {
-  console.log((loaded / total * 100) + '%');
+  document.getElementsByClassName('loading-item')[0].innerText = `Loading ${item} | ${(loaded / total * 100)}%`; 
+  document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+20)*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
+  if (loaded === total) {
+      document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
+  }
 };
 
 const playerPrecision = 100;
@@ -116,13 +120,13 @@ document.addEventListener( 'keyup', ( event ) => {
 
 document.addEventListener( 'mousedown', () => {
 
-    if (inGame) document.body.requestPointerLock();
+    if (inGame && !typing) document.body.requestPointerLock();
 
 } );
 
 document.body.addEventListener( 'mousemove', ( event ) => {
 
-    if ( document.pointerLockElement === document.body ) {
+    if ( document.pointerLockElement === document.body && inGame && !typing) {
 
         camera.rotation.y -= event.movementX / 500;
         camera.rotation.x -= event.movementY / 500;
@@ -144,14 +148,18 @@ function onWindowResize() {
 
 document.addEventListener( 'click', () => {
 
-    const sphere = spheres[ sphereIdx ];
+    if (inGame && !typing) {
 
-    camera.getWorldDirection( playerDirection );
+        const sphere = spheres[ sphereIdx ];
 
-    sphere.collider.center.copy( playerCollider.end );
-    sphere.velocity.copy( playerDirection ).multiplyScalar( 30 );
+        camera.getWorldDirection( playerDirection );
 
-    sphereIdx = ( sphereIdx + 1 ) % spheres.length;
+        sphere.collider.center.copy( playerCollider.end );
+        sphere.velocity.copy( playerDirection ).multiplyScalar( 30 );
+
+        sphereIdx = ( sphereIdx + 1 ) % spheres.length;
+
+    }
 
 } );
 
@@ -289,7 +297,7 @@ function controls( deltaTime ) {
 
     const speed = 30;
 
-    if ( playerOnFloor && !typing ) {
+    if ( playerOnFloor && !typing && inGame) {
 
         if ( keyStates[ 'KeyW' ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );

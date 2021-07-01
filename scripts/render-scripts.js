@@ -11,16 +11,21 @@ module.exports = function renderScripts() {
     
     sh.cp('-R', sourcePath, destPath)
 
-    const sourcePathScriptsJS = upath.resolve(upath.dirname(__filename), '../src/js/scripts.js');
-    const destPathScriptsJS = upath.resolve(upath.dirname(__filename), '../dist/public/js/scripts.js');
-
+    const files = ['scripts','game','ui'];
+    
     const copyright = `/*!
 * Sean McGinty - ${packageJSON.title} v${packageJSON.version} (${packageJSON.homepage})
 * Copyright ${new Date().getFullYear()} ${packageJSON.author}
 * Licensed under ${packageJSON.license} (https://github.com/s3ansh33p/${packageJSON.name}/blob/master/LICENSE)
 */
 `
-    const scriptsJS = fs.readFileSync(sourcePathScriptsJS);
     
-    fs.writeFileSync(destPathScriptsJS, copyright + scriptsJS);
+    for (let i=0; i<files.length; i++) {
+        
+        let sourcePathScriptsJS = upath.resolve(upath.dirname(__filename), `../src/js/${files[i]}.js`);
+        let destPathScriptsJS = upath.resolve(upath.dirname(__filename), `../dist/public/js/${files[i]}.js`);
+        let scriptsJS = fs.readFileSync(sourcePathScriptsJS);
+        
+        fs.writeFileSync(destPathScriptsJS, copyright + scriptsJS);
+    }
 };
