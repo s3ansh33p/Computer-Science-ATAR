@@ -18,6 +18,70 @@
 			<input id="chat-input" placeholder="Chat" type="text" class="input" name="message">
 		</div>
 		<div id="container"></div>
+		<div class="tab-scores">
+			<!-- Scores
+				Kill: +2
+				Assist: +1
+				Teamkill: -1
+				Suicide: -2
+				Scoring Flag: +5
+			
+			-->
+			<table>
+				<tbody>
+					<tr>
+						<td>
+							<div class="tb-1">
+								<img src="./assets/author.png">
+								<p>Counter Terrorists</p>
+								<p>Alive: 5/5</p>
+							</div>
+						</td>
+						<td>
+							<table class="tb-2">
+								<thead>
+									<tr>
+									<th>MS</th>
+									<th><!-- Rank | Image | Username --></th>
+									<th>Kills</th>
+									<th>Deaths</th>
+									<th>Assists</th>
+									<th>Score</th>
+									</tr>
+								</thead>
+								<tbody class="tab-players">
+								</tbody>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<div class="tb-1">
+								<img src="./assets/author.png">
+								<p>Terrorists</p>
+								<p>Alive: 5/5</p>
+							</div>
+						</td>
+						<td>
+							<table class="tb-2">
+								<thead>
+									<tr>
+									<th><div class="spacer"></div></th>
+									<th></th>
+									<th></th>
+									<th></th>
+									<th></th>
+									<th></th>
+									</tr>
+								</thead>
+								<tbody class="tab-players t">
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
         <script type="importmap">
             {
               "imports": {

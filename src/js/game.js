@@ -17,7 +17,24 @@ manager.onProgress = function ( item, loaded, total ) {
   document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+20)*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
   if (loaded === total) {
       document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
-  }
+        for (let i=0; i<5; i++) {
+            const innerHMTL = `	<tr>
+            <td>47</td>
+            <td>
+                <img src="./assets/author.png">
+                <img src="./assets/author.png">
+                s3ansh33p
+            </td>
+            <td>12</td>
+            <td>7</td>
+            <td>3</td>
+            <td>27</td>
+        </tr>
+        <tr class="spacer"></tr>`;
+        document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
+        document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
+        }
+    }
 };
 
 const playerPrecision = 100;

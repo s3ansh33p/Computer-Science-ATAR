@@ -43,7 +43,7 @@ server.onmessage = function (event) {
     } else if (JSON.parse(event.data).type == "connection") {
         // console.log(event.data);
         connectedToServer = true;
-        const conMS = Math.round(timerEnd('connectionMS')*100)/100;
+        const conMS = Math.round(timerEnd('connectionMS'));
         document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
         clientID = JSON.parse(event.data).data;
     } else if (JSON.parse(event.data).type == "chat") {
