@@ -5,7 +5,7 @@
     "scripts": {
         "build": "npm run clean && npm run build:scss && npm run build:scripts && npm run build:assets && npm run build:docs && npm run build:main",
         "build:assets": "node scripts/build-assets.js",
-        "build:docs": "jsdoc src -r && node scripts/build-docs.js",
+        "build:docs": "jsdoc src -r -d ./dist/docs",
         "build:main": "node scripts/build-main.js",
         "build:scripts": "node scripts/build-scripts.js",
         "build:scss": "node scripts/build-scss.js",
@@ -13,7 +13,7 @@
         "start": "npm run build && node scripts/start.js",
         "start:debug": "node scripts/start.js"
     },
-    "description": "An admin system made with PHP and AJAX",
+    "description": "A game for the Computer Science ATAR course",
     "keywords": [
         "css",
         "sass",
@@ -34,6 +34,7 @@
         "debug": "^4.3.1",
         "ejs": "^3.1.6",
         "express": "^4.17.1",
+        "jsdoc": "^3.6.7",
         "three": "^0.129.0",
         "ws": "^7.4.6"
     },
