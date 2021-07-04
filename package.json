@@ -3,8 +3,9 @@
     "name": "computer-science-atar",
     "version": "0.0.1",
     "scripts": {
-        "build": "npm run clean && npm run build:scss && npm run build:scripts && npm run build:assets && npm run build:main",
+        "build": "npm run clean && npm run build:scss && npm run build:scripts && npm run build:assets && npm run build:docs && npm run build:main",
         "build:assets": "node scripts/build-assets.js",
+        "build:docs": "jsdoc src -r && node scripts/build-docs.js",
         "build:main": "node scripts/build-main.js",
         "build:scripts": "node scripts/build-scripts.js",
         "build:scss": "node scripts/build-scss.js",

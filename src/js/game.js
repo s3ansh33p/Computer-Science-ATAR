@@ -12,6 +12,16 @@ let playerData = {
 
 // A manager for the loading screen
 var manager = new THREE.LoadingManager();
+
+/**
+ * Edits the loading bar's contents
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {string} item The loaded item
+ * @param   {number} loaded The number of items loaded
+ * @param   {number} total The total number of items to load
+ * @returns {void}
+ * @version 1.0
+ */
 manager.onProgress = function ( item, loaded, total ) {
   document.getElementsByClassName('loading-item')[0].innerText = `Loading ${item} | ${(loaded / total * 100)}%`; 
   document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+20)*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
@@ -180,7 +190,13 @@ document.addEventListener( 'click', () => {
 
 } );
 
-function playerCollitions() {
+/**
+ * Player collision handler
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
+function playerCollisions() {
 
     const result = worldOctree.capsuleIntersect( playerCollider );
 
@@ -202,6 +218,12 @@ function playerCollitions() {
 
 }
 
+/**
+ * Update the player's camera and position
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function updatePlayer( deltaTime ) {
 
     if ( playerOnFloor ) {
@@ -218,12 +240,18 @@ function updatePlayer( deltaTime ) {
     const deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
     playerCollider.translate( deltaPosition );
 
-    playerCollitions();
+    playerCollisions();
 
     camera.position.copy( playerCollider.end );
 
 }
 
+/**
+ * Sphere collision handler
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function spheresCollisions() {
 
     for ( let i = 0; i < spheres.length; i ++ ) {
@@ -259,6 +287,12 @@ function spheresCollisions() {
 
 }
 
+/**
+ * Create and destroy spheres
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function updateSpheres( deltaTime ) {
 
     spheres.forEach( sphere =>{
@@ -289,6 +323,12 @@ function updateSpheres( deltaTime ) {
 
 }
 
+/**
+ * Gets the forward player direction
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function getForwardVector() {
 
     camera.getWorldDirection( playerDirection );
@@ -299,6 +339,12 @@ function getForwardVector() {
 
 }
 
+/**
+ * Gets the side player direction
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function getSideVector() {
 
     camera.getWorldDirection( playerDirection );
@@ -310,6 +356,14 @@ function getSideVector() {
 
 }
 
+/**
+ * Update player info based on controls
+ * @author  https://github.com/mrdoob/three.js
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number} deltaTime Miliseonds elapsed sice last frame
+ * @returns {void}
+ * @version 1.0
+ */
 function controls( deltaTime ) {
 
     const speed = 30;
@@ -387,6 +441,12 @@ const cube2 = new THREE.Mesh( geometry, material );
 scene.add( cube );
 scene.add( cube2 );
 
+/**
+ * Transfers data to the server and renders entities
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
 function transferData() {
     // Render received data
     if (!connectedToServer) return;
@@ -429,6 +489,12 @@ function transferData() {
     }
 }
 
+/**
+ * Frame handler
+ * @author  https://github.com/mrdoob/three.js
+ * @returns {void}
+ * @version 1.0
+ */
 function animate() {
 
     const deltaTime = Math.min( 0.1, clock.getDelta() );
