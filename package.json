@@ -15,12 +15,8 @@
     },
     "description": "A game for the Computer Science ATAR course",
     "keywords": [
-        "css",
-        "sass",
-        "html",
-        "responsive",
-        "theme",
-        "template"
+        "game",
+        "three.js"
     ],
     "homepage": "https://dev.seanmcginty.space",
     "license": "MIT",
