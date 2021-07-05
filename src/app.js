@@ -37,7 +37,6 @@ const wss = new WebSocket.Server({ server });
  * @property {number}  ws.playerData.y        - The client's y camera position in the scene
  * @property {number}  ws.playerData.z        - The client's z camera position in the scene
  * @property {number}  ws.playerData.rotation - The client's camera rotation in the scene
- * @property {boolean} ws.playerData.hasFlag  - If the client has the enemy flag
  * @property {object}  ws.userData            - The client's user information
  * @property {string}  ws.userData.username   - The client's username
  * @property {boolean} ws.userData.team       - The client's team
@@ -50,39 +49,43 @@ wss.on('connection', (ws) => {
         'x':0,
         'y':0,
         'z':0,
-        'rotation': 0,
-        'hasFlag': false
+        'rotation': 0
     }
 
     ws.userData = {
         'username': '',
-        'team': (Math.round(Math.random(0,1)) == 1) ? true : false
+        'team': (Math.round(Math.random(0,1)) === 1) ? true : false
     }
 
     // After the connection is up, listen for messages.
     ws.on('message', (message) => {
 
-        if (JSON.parse(message).type == undefined) return;
+        message = new Uint8Array(message);
+        console.log(message);
 
-        if (JSON.parse(message).type == 'ping') {
+        if (message[0] === undefined) {
+            return;
+        }
 
-            ws.send(JSON.stringify({'type': 'pong'}));
+        if (message[0] === 0) {
 
-        } else if (JSON.parse(message).type == 'playerUpdate') {
+            ws.send(new Uint8Array([0]).buffer);
 
-            ws.playerData = JSON.parse(message).data;
-            wss.broadcast({'playerData':JSON.parse(message).data,'client':ws.id})
+        } else if (message[0] === 1) {
 
-        } else if (JSON.parse(message).type == 'chatMessage') {
+            wss.broadcast({'message':message.slice(1),'client':ws.id}, 3)
 
-            wss.broadcast({'message':JSON.parse(message).data,'client':ws.id}, "chat")
+        } else if (message[0] === 2) {
+
+            ws.playerData = message.slice(1);
+            wss.broadcast({'message':ws.playerData,'client':ws.id}, 4)
 
         } 
 
     });
 
-    // Broadcast new users joining
-    ws.send(JSON.stringify({'data':ws.id,'type':'connection'}));
+    // Confirm that the client is connected and send them their client id
+    ws.send(new Uint8Array([1, encodeClient(ws.id)].flat()).buffer);
 
     let activePlayers = [];
     
@@ -90,30 +93,58 @@ wss.on('connection', (ws) => {
         activePlayers.push({'client':client.id,'username':client.userData.username, 'team':client.userData.team})
      });
 
-    wss.broadcast(activePlayers, "activePlayers")
+    wss.broadcast(activePlayers, 2)
     // On active players, send positions?
 
 });
+
+
+/**
+ * Encodes a client's id from hex to a byte array
+ * @author  https://stackoverflow.com/users/1326803/jason-dreyzehner
+ * @param   {string} id The client id in hex
+ * @returns {number[]}
+ * @version 1.0
+ */
+const encodeClient = (id) => {return id.match(/.{1,2}/g).map(byte => parseInt(byte, 16))}
 
 /**
  * Sends a message to all websocket connections
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} msg The JSON data to send
- * @param   {Object} type [type="Broadcast"] The type of the message to help the client interpret the message 
+ * @param   {number} type The type of the message to help the client interpret the message 2,3,4
  * @returns {void}
  * @version 1.0
  * @example
  * broadcast({
  *  'message': "Hello World",
- *  'client':  "f536-4d9d-a966-c069"
+ *  'client':  "f5364d9da966c069"
  *  },
- *  "chat"
+ *  3
  * )
  */
-wss.broadcast = function broadcast(msg, type="broadcast") {
+wss.broadcast = function broadcast(msg, type) {
 
+    let byteData = [type];
+
+    if (type === 2) {
+
+        byteData.push(msg.length); // Number of players
+
+        for (let i=0; i<msg.length; i++) {
+            byteData.push(encodeClient(msg[i].client));
+            byteData.push(msg[i].team);
+        }
+
+    } else {
+
+        byteData.push(encodeClient(msg.client));
+        byteData.push(Array.from(msg.message));
+    
+    }
+    
     wss.clients.forEach(function each(client) {
-        client.send(JSON.stringify({'data':msg,'type':type}));
+        client.send(new Uint8Array(byteData.flat()).buffer);
      });
 
 };
@@ -122,14 +153,14 @@ wss.broadcast = function broadcast(msg, type="broadcast") {
  * Generate a unique user id
  * @author  https://www.w3resource.com/javascript-exercises/javascript-math-exercise-23.php
  * @returns {string} The UUID
- * @version 1.0
+ * @version 1.1
  * @example
  * generateID()
- * Returns "f536-4d9d-a966-c069"
+ * Returns "4536fd9da966c069"
  */
 wss.generateID = function () {
     var dt = new Date().getTime();
-    var uuid = 'xxxx-4xxx-yxxx-xxxx'.replace(/[xy]/g, function(c) {
+    var uuid = '4xxxxxxxyxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = (dt + Math.random()*16)%16 | 0;
         dt = Math.floor(dt/16);
         return (c=='x' ? r :(r&0x3|0x8)).toString(16);

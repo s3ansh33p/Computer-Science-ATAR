@@ -6,20 +6,22 @@
 const server = new WebSocket("ws://localhost:8999");
 // const server = new WebSocket("wss://socket.seanmcginty.space");
 
+// Ensure that the messages transfered via the websocket are buffers
+server.binaryType = 'arraybuffer';
+
 /**
  * Sends a JSON object to the server via a websocket
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} data JSON object usually with data and type
  * @returns {void}
- * @version 1.0
+ * @version 1.1
  * @example
  * sendData({
  *  'data': {
  *           'x':        10,
  *           'y':        5,
  *           'z':        23,
- *           'rotation': 0,
- *           'hasFlag':  false
+ *           'rotation': 0
  *  },
  *  'type': 'playerUpdate'
  * })
@@ -27,16 +29,130 @@ const server = new WebSocket("ws://localhost:8999");
  */
 function sendData(data) {
 
-    server.send(JSON.stringify(data));
+    // server.send(JSON.stringify(data));
+    
+    /*
+        Data breakdown for networking
+        
+        Byte[0] = MessageType
+        
+        Client Side
+        0: Ping
+        1: Chat Message
+        2: Player Update
+
+        Server Side
+        0: Pong
+        1: Player Connection
+        2: Active Connections
+        3: Chat Broadcast
+        4: Player Broadcast
+
+        Byte[1, ...] = Data
+
+        Client Side
+        If Chat Message [1, <new TextEncoder().encode("chat message")>]
+        If Player Update [2, x int value, x decimal value (% 1), y int value, y decimal value, z int value, z decimal value, rotation +/-, rotation]
+
+        Server Side (UUID is 16 bytes)
+        If Player Connection [1, <UUID>]
+        If Active Connection [2, number of players,<UUID>, Team, <UUID>, Team, ...]
+            The client can then make a POST request to get the usernames from the UUIDs
+        If Chat Broadcast [3, <UUID>, <new TextDecoder("utf-8").decode(message)>]
+        If Player Broadcast [4, <UUID>, x int value, x decimal value (% 1), y int value, y decimal value, z int value, z decimal value, rotation +/-, rotation]
+
+
+    */
+    
+    /**
+     * An array to store data to send to the server
+     * @type {number[]}
+     */
+    let byteData = [];
+
+    /**
+     * An array to map JSON typings to byte values for networking
+     * @constant
+     * @type {string[]}
+     */
+    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" ];
+
+    if (typings.indexOf(data.type.toUpperCase()) === -1) {
+
+        console.log('Malformed data: ', JSON.stringify(data));
+        return;
+
+    } else {
+
+        byteData[0] = typings.indexOf(data.type.toUpperCase());
+
+    }
+
+    if (byteData[0] === 1) {
+
+        byteData.push(Array.from(new TextEncoder().encode(data.data)));
+
+    } else if (byteData[0] === 2) {
+
+        byteData.push([
+            parseInt(((data.data.x >= 0) ? 100 : 200) + Math.abs(data.data.x)), // add 200 or 100 if =/-
+            parseInt(1+(Math.abs(data.data.x) % 1).toFixed(2).slice(2)), // as 0.3 is actually 0.2999999, 1+ as 0.01 = 1 but should be 01
+            parseInt(((data.data.y >= 0) ? 100 : 200) + Math.abs(data.data.y)),
+            parseInt(1+(Math.abs(data.data.y) % 1).toFixed(2).slice(2)),
+            parseInt(((data.data.z >= 0) ? 100 : 200) + Math.abs(data.data.z)),
+            parseInt(1+(Math.abs(data.data.z) % 1).toFixed(2).slice(2)),
+            ((data.data.rotation >= 0) ? 0 : 1),
+            (Math.abs(data.data.rotation))
+        ]);
+
+    }
+
+    // Finally, send the data to the server
+    server.send(new Uint8Array(byteData.flat()).buffer);
 
 }
 
-let clientID = 0;
+/**
+ * The players client id used or networking
+ * @type {string}
+ */
+let clientID = '';
+
+/**
+ * An array of other players (does not include the player)
+ * @name otherPlayers
+ * @type {Object[]}
+ * @property {Object}  otherPlayers[index]          - Another player's data
+ * @property {number}  otherPlayers[index].x        - Another player's x camera position in the scene
+ * @property {number}  otherPlayers[index].y        - Another player's y camera position in the scene
+ * @property {number}  otherPlayers[index].z        - Another player's z camera position in the scene
+ * @property {number}  otherPlayers[index].rotation - Another player's camera rotation in the scene
+ * @property {string}  otherPlayers[index].client   - Another player's client id
+ */
 let otherPlayers = [];
+
+/**
+ * If the player has the chat active or not
+ * @type {boolean}
+ */
 let typing = false;
+
+/**
+ * If the player is connected to the server
+ * @type {boolean}
+ */
 let connectedToServer = false; // Potentially store this and status info in one variable. Like status = 1 | 2 | 3 ... 'connected', 'ingame', 'disconnected' etc
+
+/**
+ * If the player is in a game
+ * @type {boolean}
+ */
 let inGame = false;
 
+/**
+ * Holds the timers to measure difference of time between the code
+ * @type {number[]}
+ */
 var timers = {};
 
 /**
@@ -72,6 +188,7 @@ function timerEnd(name) {
     return time;
 }
 
+// Start the timer 'connectionMS'
 timer('connectionMS');
 
 /**
@@ -97,48 +214,54 @@ const getGameLength = (s) => {
 }
 
 /**
- * Callback function that is called when the client receives a message from the server.
+ * Callback function that is called when the client receives a message from the server
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} event The message contents
  * @returns {void}
- * @version 1.0
+ * @version 1.1
  */
 server.onmessage = function (event) {
 
-    // console.log(event.data);
+    const Uint8View = new Uint8Array(event.data);
+    // console.log(Uint8View);
 
-    if (JSON.parse(event.data).type == "pong") {
+    if (Uint8View[0] === 0) {
 
         pong();
 
-    } else if (JSON.parse(event.data).type == "broadcast") {
+    } else if (Uint8View[0] === 4) {
 
-        if (otherPlayers.length != 0) {
+        if (otherPlayers.length !== 0) {
 
-            let index = otherPlayers.findIndex(obj => obj.client == JSON.parse(event.data).data.client);
+            const decodedClient = decodeClient( Uint8View.slice(1,9) );
 
-            if (index != -1) { // checks if the player exists
+            let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
 
-                otherPlayers[index] = JSON.parse(event.data).data.playerData;
-                otherPlayers[index].client = JSON.parse(event.data).data.client;
+            if (index !== -1) { // checks if the player exists
+
+                otherPlayers[index].x = parseFloat( ((Uint8View[9].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[9].toString().slice(1) + "." + Uint8View[10].toString().slice(1) );
+                otherPlayers[index].y = parseFloat( ((Uint8View[11].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[11].toString().slice(1) + "." + Uint8View[12].toString().slice(1) );
+                otherPlayers[index].z = parseFloat( ((Uint8View[13].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[13].toString().slice(1) + "." + Uint8View[14].toString().slice(1) );
+                otherPlayers[index].rotation = parseFloat( ((Uint8View[15] === 1) ? -1 : 1) * Uint8View[16] );
+                otherPlayers[index].client = decodedClient;
 
             }
 
         }
 
-    } else if (JSON.parse(event.data).type == "connection") {
+    } else if (Uint8View[0] === 1) {
 
         connectedToServer = true;
-        clientID = JSON.parse(event.data).data;
+        clientID = decodeClient(Uint8View.slice(1));
 
         const conMS = Math.round(timerEnd('connectionMS'));
         document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
 
-    } else if (JSON.parse(event.data).type == "chat") {
+    } else if (Uint8View[0] === 3) {
 
         const chatContainer = document.getElementById('chat-msg-container');
 
-        chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${JSON.parse(event.data).data.client}: </span>${JSON.parse(event.data).data.message}</div></div>` + chatContainer.innerHTML;
+        chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
         
         if (chatContainer.children.length > 20) {
 
@@ -146,23 +269,22 @@ server.onmessage = function (event) {
 
         }
 
-    } else if (JSON.parse(event.data).type == "activePlayers") {
+    } else if (Uint8View[0] === 2) {
 
         otherPlayers = []; // Defined in game.js
 
-        for (let i=0; i<JSON.parse(event.data).data.length; i++) {
+        for (let i = 0; i < Uint8View[1]; i++) {
 
-            if (JSON.parse(event.data).data[i].client != clientID) {
+            const decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
 
-                // console.log(JSON.parse(event.data).data[i])
+            if ( decodedClient !== clientID) {
 
                 otherPlayers.push({ 
                     'x':0,
                     'y':0,
                     'z':0,
                     'rotation': 0,
-                    'hasFlag': false,
-                    'client': JSON.parse(event.data).data[i].client
+                    'client': decodedClient
                 })
 
             }
@@ -172,6 +294,15 @@ server.onmessage = function (event) {
     }
 
 }
+
+/**
+ * Decodes a client's id from a byte array to hex
+ * @author  https://stackoverflow.com/users/1326803/jason-dreyzehner
+ * @param   {number[]} id The client id in array byte form
+ * @returns {string}
+ * @version 1.0
+ */
+const decodeClient = (id) => {return id.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '')}
 
 /**
  * Sends a ping JSON object to the server
@@ -213,17 +344,15 @@ server.onopen = function () {
     setInterval(ping, 15000);
 }
 
-document.addEventListener('keyup',checkUI(e))
-
 /**
  * Check if the key released is configured for interacting with a UI element
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {KeyboardEvent} e The keyboard event from the event listener
  * @returns {void}
- * @version 1.0
+ * @version 1.1
  * @todo Change KeyY to be configurable in a menu / settings
  */
-function checkUI (e) {
+document.addEventListener('keyup',function (e) {
 
     if (e.code == "KeyY" && !typing) {
 
@@ -239,7 +368,7 @@ function checkUI (e) {
         if (document.getElementById('chat-input').value != "") {
 
             sendData({
-                'data':document.getElementById('chat-input').value,
+                'data': document.getElementById('chat-input').value,
                 'type': 'chatMessage'
             })
 
@@ -248,7 +377,7 @@ function checkUI (e) {
         }
     }
 
-}
+})
 
 /**
  * Join a game
