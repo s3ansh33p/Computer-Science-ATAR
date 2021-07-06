@@ -507,9 +507,9 @@ function animate() {
 
     const deltaTime = Math.min( 0.1, clock.getDelta() );
 
-    updatePlayer( deltaTime );
-    
     controls( deltaTime );
+    
+    updatePlayer( deltaTime );
     
     updateSpheres( deltaTime );
 
