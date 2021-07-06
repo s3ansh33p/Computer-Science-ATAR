@@ -366,6 +366,8 @@ function joinGame() {
 
     setTimeout(() => {
         inGame = true;
+        window.mynamespace = window.mynamespace || {};
+        mynamespace.animate();
     }, 400);
 
     setTimeout(() => {

@@ -23,27 +23,30 @@ var manager = new THREE.LoadingManager();
  * @version 1.0
  */
 manager.onProgress = function ( item, loaded, total ) {
-  document.getElementsByClassName('loading-item')[0].innerText = `Loading ${item} | ${(loaded / total * 100)}%`; 
+  document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${item} | ${(loaded / total * 100)}%`; 
+  console.log(`[LOADER]: ${document.getElementsByClassName('loading-item')[0].innerText}`)
   document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+20)*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
   if (loaded === total) {
-      document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
-        for (let i=0; i<5; i++) {
-            const innerHMTL = `	<tr>
-            <td>47</td>
-            <td>
-                <img src="./assets/author.png">
-                <img src="./assets/author.png">
-                s3ansh33p
-            </td>
-            <td>12</td>
-            <td>7</td>
-            <td>3</td>
-            <td>27</td>
-        </tr>
-        <tr class="spacer"></tr>`;
-        document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
-        document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
-        }
+      setTimeout(() => {
+        document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
+            for (let i=0; i<5; i++) {
+                const innerHMTL = `	<tr>
+                <td>47</td>
+                <td>
+                    <img src="./assets/author.png">
+                    <img src="./assets/author.png">
+                    s3ansh33p
+                </td>
+                <td>12</td>
+                <td>7</td>
+                <td>3</td>
+                <td>27</td>
+            </tr>
+            <tr class="spacer"></tr>`;
+            document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
+            document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
+            }
+        },300)
     }
 };
 
@@ -124,7 +127,10 @@ for ( let i = 0; i < NUM_SPHERES; i ++ ) {
 
 const worldOctree = new Octree();
 
-const playerCollider = new Capsule( new THREE.Vector3( 0, 0.35, 0 ), new THREE.Vector3( 0, 1, 0 ), 0.35 );
+// T Spawn
+const playerCollider = new Capsule( new THREE.Vector3( -6, 1.35, 42 ), new THREE.Vector3( -6, 2, 42 ), 0.35 );
+// CT Spawn
+// const playerCollider = new Capsule( new THREE.Vector3( 10, -3.65, -25 ), new THREE.Vector3( 10, -3, -25 ), 0.35 );
 
 const playerVelocity = new THREE.Vector3();
 const playerDirection = new THREE.Vector3();
@@ -497,12 +503,14 @@ function transferData() {
  */
 function animate() {
 
+    if (!inGame) return;
+
     const deltaTime = Math.min( 0.1, clock.getDelta() );
 
-    controls( deltaTime );
-
     updatePlayer( deltaTime );
-
+    
+    controls( deltaTime );
+    
     updateSpheres( deltaTime );
 
     renderer.render( scene, camera );
@@ -514,3 +522,6 @@ function animate() {
     requestAnimationFrame( animate );
 
 }
+
+window.mynamespace = window.mynamespace || {};
+mynamespace.animate = function() {animate()}
