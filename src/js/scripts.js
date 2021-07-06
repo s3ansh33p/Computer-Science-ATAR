@@ -14,7 +14,7 @@ server.binaryType = 'arraybuffer';
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} data JSON object usually with data and type
  * @returns {void}
- * @version 1.1
+ * @version 1.2
  * @example
  * sendData({
  *  'data': {
@@ -25,45 +25,9 @@ server.binaryType = 'arraybuffer';
  *  },
  *  'type': 'playerUpdate'
  * })
- * @todo Optimize Websocket communiation with binary messages
  */
 function sendData(data) {
 
-    // server.send(JSON.stringify(data));
-    
-    /*
-        Data breakdown for networking
-        
-        Byte[0] = MessageType
-        
-        Client Side
-        0: Ping
-        1: Chat Message
-        2: Player Update
-
-        Server Side
-        0: Pong
-        1: Player Connection
-        2: Active Connections
-        3: Chat Broadcast
-        4: Player Broadcast
-
-        Byte[1, ...] = Data
-
-        Client Side
-        If Chat Message [1, <new TextEncoder().encode("chat message")>]
-        If Player Update [2, x int value, x decimal value (% 1), y int value, y decimal value, z int value, z decimal value, rotation +/-, rotation]
-
-        Server Side (UUID is 16 bytes)
-        If Player Connection [1, <UUID>]
-        If Active Connection [2, number of players,<UUID>, Team, <UUID>, Team, ...]
-            The client can then make a POST request to get the usernames from the UUIDs
-        If Chat Broadcast [3, <UUID>, <new TextDecoder("utf-8").decode(message)>]
-        If Player Broadcast [4, <UUID>, x int value, x decimal value (% 1), y int value, y decimal value, z int value, z decimal value, rotation +/-, rotation]
-
-
-    */
-    
     /**
      * An array to store data to send to the server
      * @type {number[]}
@@ -223,73 +187,83 @@ const getGameLength = (s) => {
 server.onmessage = function (event) {
 
     const Uint8View = new Uint8Array(event.data);
-    // console.log(Uint8View);
 
-    if (Uint8View[0] === 0) {
+    switch(Uint8View[0]) {
 
-        pong();
+        case 0:
 
-    } else if (Uint8View[0] === 4) {
+            pong();
+            break;
 
-        if (otherPlayers.length !== 0) {
+        case 1:
 
-            const decodedClient = decodeClient( Uint8View.slice(1,9) );
+            connectedToServer = true;
+            clientID = decodeClient(Uint8View.slice(1));
 
-            let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
+            const conMS = Math.round(timerEnd('connectionMS'));
+            document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
+            break;
 
-            if (index !== -1) { // checks if the player exists
+        case 2:
 
-                otherPlayers[index].x = parseFloat( ((Uint8View[9].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[9].toString().slice(1) + "." + Uint8View[10].toString().slice(1) );
-                otherPlayers[index].y = parseFloat( ((Uint8View[11].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[11].toString().slice(1) + "." + Uint8View[12].toString().slice(1) );
-                otherPlayers[index].z = parseFloat( ((Uint8View[13].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[13].toString().slice(1) + "." + Uint8View[14].toString().slice(1) );
-                otherPlayers[index].rotation = parseFloat( ((Uint8View[15] === 1) ? -1 : 1) * Uint8View[16] );
-                otherPlayers[index].client = decodedClient;
+            otherPlayers = []; // Defined in game.js
 
-            }
+            for (let i = 0; i < Uint8View[1]; i++) {
 
-        }
+                const decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
 
-    } else if (Uint8View[0] === 1) {
+                if ( decodedClient !== clientID) {
 
-        connectedToServer = true;
-        clientID = decodeClient(Uint8View.slice(1));
+                    otherPlayers.push({ 
+                        'x':0,
+                        'y':0,
+                        'z':0,
+                        'rotation': 0,
+                        'client': decodedClient
+                    })
 
-        const conMS = Math.round(timerEnd('connectionMS'));
-        document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
-
-    } else if (Uint8View[0] === 3) {
-
-        const chatContainer = document.getElementById('chat-msg-container');
-
-        chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
-        
-        if (chatContainer.children.length > 20) {
-
-            chatContainer.children[20].remove();
-
-        }
-
-    } else if (Uint8View[0] === 2) {
-
-        otherPlayers = []; // Defined in game.js
-
-        for (let i = 0; i < Uint8View[1]; i++) {
-
-            const decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
-
-            if ( decodedClient !== clientID) {
-
-                otherPlayers.push({ 
-                    'x':0,
-                    'y':0,
-                    'z':0,
-                    'rotation': 0,
-                    'client': decodedClient
-                })
+                }
 
             }
+            break;
 
-        }
+        case 3:
+
+            const chatContainer = document.getElementById('chat-msg-container');
+
+            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
+            
+            if (chatContainer.children.length > 20) {
+
+                chatContainer.children[20].remove();
+
+            }
+            break;
+
+        case 4:
+            
+            if (otherPlayers.length !== 0) {
+
+                const decodedClient = decodeClient( Uint8View.slice(1,9) );
+
+                let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
+
+                if (index !== -1) { // checks if the player exists
+
+                    otherPlayers[index].x = parseFloat( ((Uint8View[9].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[9].toString().slice(1) + "." + Uint8View[10].toString().slice(1) );
+                    otherPlayers[index].y = parseFloat( ((Uint8View[11].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[11].toString().slice(1) + "." + Uint8View[12].toString().slice(1) );
+                    otherPlayers[index].z = parseFloat( ((Uint8View[13].toString().slice(0,1) === "2") ? "-" : "" ) + Uint8View[13].toString().slice(1) + "." + Uint8View[14].toString().slice(1) );
+                    otherPlayers[index].rotation = parseFloat( ((Uint8View[15] === 1) ? -1 : 1) * Uint8View[16] );
+                    otherPlayers[index].client = decodedClient;
+
+                }
+
+            }
+            break;
+
+        default:
+
+            console.log(`Malformed packet: ${Uint8View}`);
 
     }
 
