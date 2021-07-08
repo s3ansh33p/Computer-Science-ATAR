@@ -3,7 +3,7 @@
 This project is apart of my Computer Science course and is the final programming assessment.
 The task is to create a web or desktop game that supports multiplayer.
 I have decided to create a FPS game working with [Three.JS](https://github.com/mrdoob/three.js).
-I am taking inspiration from CS:GO for this project in terms of the UI.
+I am taking heavy inspiration from CS:GO for this project.
 
 [Planning document](https://docs.google.com/document/d/1TK5HlipziA2nSvrkaUz8Xi36uU8StKVAvU3BXdNLBgE/)
 

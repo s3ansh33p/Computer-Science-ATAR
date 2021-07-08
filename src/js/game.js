@@ -128,9 +128,11 @@ for ( let i = 0; i < NUM_SPHERES; i ++ ) {
 const worldOctree = new Octree();
 
 // T Spawn
-const playerCollider = new Capsule( new THREE.Vector3( -6, 1.35, 42 ), new THREE.Vector3( -6, 2, 42 ), 0.35 );
+const playerCollider = new Capsule( new THREE.Vector3( -15, 4.35, 35 ), new THREE.Vector3( -15, 5, 35 ), 0.35 );
+camera.lookAt(-1, 0, -28);
 // CT Spawn
-// const playerCollider = new Capsule( new THREE.Vector3( 10, -3.65, -25 ), new THREE.Vector3( 10, -3, -25 ), 0.35 );
+// const playerCollider = new Capsule( new THREE.Vector3( 5, -1, -28 ), new THREE.Vector3( 5, -0.35, -28 ), 0.35 );
+// camera.lookAt(-1, 0, 35);
 
 const playerVelocity = new THREE.Vector3();
 const playerDirection = new THREE.Vector3();
@@ -393,7 +395,7 @@ function controls( deltaTime ) {
         }
 
         if ( keyStates[ 'Space' ] ) {
-            playerVelocity.y = 15;
+            playerVelocity.y = 11;
         }
 
     }
@@ -422,12 +424,21 @@ loader.load( 'scene.glb', ( gltf ) => {
 
         if ( child.isMesh ) {
 
-            child.castShadow = true;
-            child.receiveShadow = true;
+            // Added custom objects with the Material "CollisionBox.0xx" to act as collision borders to prevent players escaping the map.
+            if ( child.name.slice(0,12) === "CollisionBox" ) {
 
-            if ( child.material.map ) {
+                child.visible = false;
 
-                child.material.map.anisotropy = 8;
+            } else {
+
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                if ( child.material.map ) {
+
+                    child.material.map.anisotropy = 8;
+
+                }
 
             }
 
