@@ -4,5 +4,5 @@ node_modules/
 # Ignore the build directory
 /dist
 
-# The file containing environment variables 
-/src/.env
+# The file containing environment variables - for some reason this does not work??
+**/.env
