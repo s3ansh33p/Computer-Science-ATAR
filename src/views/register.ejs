@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <%- include('./components/header.ejs'); %>
+    
+    <body class="center">
+    <form class="form-signin" action="/auth-register" method="POST">
+      <div class="text-center mb-4">
+        <img class="mb-4 rounded-circle" src="/assets/author.png" alt="Author" width="120" height="120">
+        <h3 class="mb-3 font-weight-normal">Computer Science Register</h3>
+      </div>
+
+      <% if (typeof accountexists !== 'undefined') { %>
+
+        <h5 class="text-center text-danger mb-4">Account Already Exists</h5>
+
+      <% } %>
+
+      <div class="form-label-group">
+        <input type="text" id="inputUsername" class="form-control" placeholder="Username" name="username" required autofocus>
+        <label for="inputUsername">Username</label>
+      </div>
+      <div class="form-label-group">
+        <input type="email" id="inputEmail" class="form-control" placeholder="Email address" name="email" required>
+        <label for="inputEmail">Email address</label>
+      </div>
+      <div class="form-label-group">
+        <input type="password" id="inputPassword" class="form-control" placeholder="Password" name="password" required>
+        <label for="inputPassword">Password</label>
+      </div>
+      <button class="btn btn-lg btn-primary btn-block w-100" type="submit">Register</button>
+      <p class="mt-5 mb-3 text-muted text-center">&copy; 2021 Sean McGinty | <a href="./login">Login</a> | <a href="../">Homepage</a></p>
+    </form>
+</body>
+</html> 

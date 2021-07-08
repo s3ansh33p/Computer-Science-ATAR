@@ -2,7 +2,18 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const mysql = require('mysql');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const { encrypt } = require('./server/aes');
+
 const app = express();
+const connection = mysql.createConnection({
+	host     : 'localhost',
+	user     : 'root',
+	password : '',
+	database : 'csc'
+});
 
 /**
  * Port for the express server to serve content on
@@ -22,6 +33,14 @@ const wsport = 8999;
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(path.join(__dirname, '../node_modules/three')));
 app.use('/docs', express.static(path.join(__dirname, '/docs')))
+
+app.use(session({
+	secret: 'secret',
+	resave: true,
+	saveUninitialized: true
+}));
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(bodyParser.json());
 
 app.set('view engine', 'ejs');
 
@@ -153,15 +172,15 @@ wss.broadcast = function broadcast(msg, type) {
  * Generate a unique user id
  * @author  https://www.w3resource.com/javascript-exercises/javascript-math-exercise-23.php
  * @returns {string} The UUID
- * @version 1.1
+ * @version 1.2
  * @example
  * generateID()
  * Returns "4536fd9da966c069"
  */
 wss.generateID = function () {
-    var dt = new Date().getTime();
-    var uuid = '4xxxxxxxyxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (dt + Math.random()*16)%16 | 0;
+    let dt = new Date().getTime();
+    let uuid = '4xxxxxxxyxxxxxxx'.replace(/[xy]/g, function(c) {
+        let r = (dt + Math.random()*16)%16 | 0;
         dt = Math.floor(dt/16);
         return (c=='x' ? r :(r&0x3|0x8)).toString(16);
     });
@@ -181,15 +200,38 @@ app.get('/', (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-    res.render(path.join(__dirname, '/views/login'), {
+    let props = {
         title: 'Login'
-    });
+    };
+    if (req.session.loginerror) {
+        props.loginerror = true;
+        req.session.loginerror = undefined;
+    } else if (req.session.accountcreated) {
+        props.accountcreated = true;
+        req.session.accountcreated = undefined;
+    }
+    res.render(path.join(__dirname, '/views/login'), props);
+})
+
+app.get('/register', (req, res) => {
+    let props = {
+        title: 'Register'
+    };
+    if (req.session.accountexists) {
+        props.accountexists = true;
+        req.session.accountexists = undefined;
+    }
+    res.render(path.join(__dirname, '/views/register'), props);
 })
 
 app.get('/game', (req, res) => {
-    res.render(path.join(__dirname, '/views/game'), {
-        title: 'Game'
-    });
+    if (req.session.loggedin) {
+        res.render(path.join(__dirname, '/views/game'), {
+            title: 'Game'
+        });
+    } else {
+		res.redirect('/login');
+	}
 })
 
 app.get('/shop', (req, res) => {
@@ -202,6 +244,62 @@ app.get('/api/players/:id', (req, res) => {
     const players = mysqlGetPlayer(req.params.id);
     res.json({'players':players});
 })
+
+app.post('/auth', function(req, res) {
+	const email = req.body.email;
+    const password = req.body.password;
+	if (email && password) {
+        const hash = encrypt(Buffer.from(password, 'utf8'));
+		connection.query('SELECT * FROM users WHERE email = ? AND password = ?', [email, hash], function(error, results, fields) {
+			if (results.length > 0) {
+				req.session.loggedin = true;
+				req.session.email = email;
+				res.redirect('/home');
+			} else {
+                req.session.loginerror = true;
+				res.redirect('/login');
+			}			
+			res.end();
+		});
+	} else {
+		res.send('Please enter Username and Password!');
+		res.end();
+	}
+});
+
+app.post('/auth-register', function(req, res) {
+	const username = req.body.username;
+	const email = req.body.email;
+    const password = req.body.password;
+	if (username && email && password) {
+		connection.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], function(error, results, fields) {
+            if (results.length > 0) {
+				req.session.accountexists = true;
+				res.redirect('/register');
+			    res.end();
+			} else {
+                const hash = encrypt(Buffer.from(password, 'utf8'));
+                connection.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash], function(error, results, fields) {
+                    req.session.accountcreated = true;
+                    res.redirect('/login');
+			        res.end();
+                });
+			}			
+		});
+	} else {
+		res.send('Please enter Username, Email and Password!');
+		res.end();
+	}
+});
+
+app.get('/home', function(req, res) {
+	if (req.session.loggedin) {
+		res.send('Welcome back, ' + req.session.email + '!');
+	} else {
+		res.send('Please login to view this page!');
+	}
+	res.end();
+});
 
 // Add a 404 route
 app.get('*', (req, res) => {

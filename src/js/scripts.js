@@ -43,7 +43,10 @@ function sendData(data) {
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
-        console.log('Malformed data: ', JSON.stringify(data));
+        console.log(
+            `%c[System]%c Malformed data: ${JSON.stringify(data)}`,
+            "color: #fff000;",""
+        );
         return;
 
     } else {
@@ -263,7 +266,10 @@ server.onmessage = function (event) {
 
         default:
 
-            console.log(`Malformed packet: ${Uint8View}`);
+            console.log(
+                `%c[System]%c Malformed packet: ${Uint8View}`,
+                "color: #fff000;",""
+            );
 
     }
 
@@ -290,9 +296,12 @@ function ping() {
         sendData({'type': 'ping'})
 
         tm = setTimeout(function () {
-            console.log('Connection Timed Out')
+            console.log(
+                `%c[System]%c Connection Timed Out`,
+                "color: #fff000;",""
+            );
             connectedToServer = false;
-        }, 5000);
+        }, 10000);
 
     }
 }
@@ -315,7 +324,7 @@ function pong() {
  * @version 1.0
  */
 server.onopen = function () {
-    setInterval(ping, 15000);
+    setInterval(ping, 30000);
 }
 
 /**
@@ -328,13 +337,13 @@ server.onopen = function () {
  */
 document.addEventListener('keyup',function (e) {
 
-    if (e.code == "KeyY" && !typing) {
+    if (e.code === "KeyY" && !typing) {
 
         document.getElementById('chat-input').value = "";
         typing = true
         document.getElementById('chat-input').focus();
 
-    } else if (e.code == "Enter" && typing) {
+    } else if (e.code === "Enter" && typing) {
 
         document.getElementById('chat-input').blur();
         typing = false;
@@ -349,6 +358,38 @@ document.addEventListener('keyup',function (e) {
             document.getElementById('chat-input').value = "";
 
         }
+    } else if (e.code === "Tab") {
+
+        e.preventDefault();
+        document.getElementsByClassName('tab-container')[0].style.display = 'none';
+
+    }
+
+})
+
+/**
+ * Check if the key pressed is configured for interacting with a UI element
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {KeyboardEvent} e The keyboard event from the event listener
+ * @returns {void}
+ * @version 1.0
+ * @todo Change Tab to be configurable in a menu / settings
+ */
+document.addEventListener('keydown',function (e) {
+
+    if (e.code === "Tab") {
+
+        e.preventDefault();
+        document.getElementsByClassName('tab-container')[0].style.display = 'flex';
+
+    } else if (e.code === "Escape") {
+
+        e.preventDefault();
+        console.log(
+            `%c[System]%c Display settings menu`,
+            "color: #fff000;",""
+        );
+
     }
 
 })

@@ -20,12 +20,15 @@ var manager = new THREE.LoadingManager();
  * @param   {number} loaded The number of items loaded
  * @param   {number} total The total number of items to load
  * @returns {void}
- * @version 1.0
+ * @version 1.1
  */
 manager.onProgress = function ( item, loaded, total ) {
-  document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${item} | ${(loaded / total * 100)}%`; 
-  console.log(`[LOADER]: ${document.getElementsByClassName('loading-item')[0].innerText}`)
-  document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+20)*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
+  document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total * 100)*1000)/1000}%`; 
+  console.log(
+    `%c[Loader]%c ${document.getElementsByClassName('loading-item')[0].innerText}`,
+    "color: #fff000;",""
+  );
+  document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
   if (loaded === total) {
       setTimeout(() => {
         document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;

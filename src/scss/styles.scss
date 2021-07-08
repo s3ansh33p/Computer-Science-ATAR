@@ -447,82 +447,89 @@ body.center {
         padding: 10px;
     }
 
-    .tab-scores {
+    .tab-container {
         position: absolute;
         top: 0;
         left: 0;
-        height: 50%;
-        width: 50%;
-        transform: translate(
-            50%, 50%
-        );
+        height: 100%;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center;
-        flex-direction: column;
+        z-index: 1;
 
-        .spacer {
-            height: 5px;
-        }
-
-        .tb-1 {
+        .tab-scores {
+            background-color: rgba(0, 0, 0, 0.75);
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             flex-direction: column;
-            padding-right: 1rem;
 
-            img {
-                height: 60px;
+            .spacer {
+                height: 5px;
             }
 
-            p {
-                margin: 0;
-            }
-        }
-
-        .tb-2 {
-            thead {
-                :nth-child(1) {
-                    width: 40px;
-                }
-
-                :nth-child(2) {
-                    width: 250px;
-                }
-
-                :nth-child(n+3) {
-                    width: 60px;
-                }
-            }
-
-            .tab-players {
-                color: #00c0ff;
-                
-                &.t {
-                    color: orange;
-                }
-
-                td {
-                    background-color: #333333;
-
-                    &:nth-child(1) {
-                        color: #dfdfdf;
-                    }
-
-                    &:nth-child(2) {
-                        text-align: left;
-                    }
-
-                    &:nth-child(3), &:nth-child(5) {
-                        background-color: #545454;
-                    }
-                }
+            .tb-1 {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                flex-direction: column;
+                padding-right: 1rem;
 
                 img {
-                    width: 20px;
+                    height: 60px;
+                }
+
+                p {
+                    margin: 0;
+                }
+            }
+
+            .tb-2 {
+                thead {
+                    :nth-child(1) {
+                        min-width: 32px;
+                        max-width: 32px;
+                    }
+
+                    :nth-child(2) {
+                        width: 250px;
+                    }
+
+                    :nth-child(n+3) {
+                        min-width: 52px;
+                        max-width: 52px;
+                    }
+                }
+
+                .tab-players {
+                    color: #00c0ff;
+                    
+                    &.t {
+                        color: orange;
+                    }
+
+                    td {
+                        background-color: #333333;
+
+                        &:nth-child(1) {
+                            color: #dfdfdf;
+                        }
+
+                        &:nth-child(2) {
+                            text-align: left;
+                        }
+
+                        &:nth-child(3), &:nth-child(5) {
+                            background-color: #545454;
+                        }
+                    }
+
+                    img {
+                        width: 20px;
+                    }
                 }
             }
         }

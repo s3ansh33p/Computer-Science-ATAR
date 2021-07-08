@@ -27,13 +27,17 @@ https://dev.seanmcginty.space
 
 To run this project, you will need to add the following environment variables to your .env file
 
-`MYSQL_HOST`
+`MYSQL_HOST` - localhost
 
-`MYSQL_DATABASE`
+`MYSQL_DATABASE` - csc
 
-`MYSQL_USERNAME`
+`MYSQL_USERNAME` - root
 
-`MYSQL_PASSWORD`
+`MYSQL_PASSWORD` - pass
+
+`ENC_KEY` - crypto.randomBytes(16).toString('hex')
+
+`ENC_IV` - crypto.randomBytes(16).toString('hex')
 
 
   

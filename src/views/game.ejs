@@ -4,83 +4,9 @@
     <%- include('./components/header.ejs'); %>
     
 	<body>
-		<div id="loader">
-			<p class="loading-text">Connecting to server...</p>
-			<div class="loading-bar">
-				<div class="loading-inner-bar"></div>
-			</div>
-			<p class="loading-item">Loading...</p>
-		</div>
-		<!-- https://codepen.io/Boogiesox/pen/MYbWrj -->
-		<div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div>
-		<div id="chat">
-			<div id="chat-msg-container"></div>
-			<input id="chat-input" placeholder="Chat" type="text" class="input" name="message">
-		</div>
-		<div id="container"></div>
-		<div class="tab-scores" style="display: none;">
-			<!-- Scores
-				Kill: +2
-				Assist: +1
-				Suicide: -1 Kills
-				Scoring Flag: +5
-			-->
-			<h2 id="tab-mode">Mode Loading... | Map Loading... | 9:59</h2>
-			<table>
-				<tbody>
-					<tr>
-						<td>
-							<div class="tb-1">
-								<img src="./assets/author.png">
-								<p>Counter Terrorists</p>
-								<p>Alive: 5/5</p>
-							</div>
-						</td>
-						<td>
-							<table class="tb-2">
-								<thead>
-									<tr>
-									<th>MS</th>
-									<th><!-- Rank | Image | Username --></th>
-									<th>Kills</th>
-									<th>Deaths</th>
-									<th>Assists</th>
-									<th>Score</th>
-									</tr>
-								</thead>
-								<tbody class="tab-players">
-								</tbody>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<div class="tb-1">
-								<img src="./assets/author.png">
-								<p>Terrorists</p>
-								<p>Alive: 5/5</p>
-							</div>
-						</td>
-						<td>
-							<table class="tb-2">
-								<thead>
-									<tr>
-									<th><div class="spacer"></div></th>
-									<th></th>
-									<th></th>
-									<th></th>
-									<th></th>
-									<th></th>
-									</tr>
-								</thead>
-								<tbody class="tab-players t">
-								</tbody>
-							</table>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+
+		<%- include('./components/game-core.ejs'); %>
+		
         <script type="importmap">
             {
               "imports": {

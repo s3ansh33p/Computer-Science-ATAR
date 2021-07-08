@@ -4,11 +4,21 @@
   <%- include('./components/header.ejs'); %>
     
     <body class="center">
-    <form class="form-signin" action="/submitLogin" method="POST">
+    <form class="form-signin" action="/auth" method="POST">
       <div class="text-center mb-4">
         <img class="mb-4 rounded-circle" src="/assets/author.png" alt="Author" width="120" height="120">
-        <h1 class="h3 mb-3 font-weight-normal">Computer Science Login</h1>
+        <h3 class="mb-3 font-weight-normal">Computer Science Login</h3>
       </div>
+
+      <% if (typeof loginerror !== 'undefined') { %>
+
+        <h5 class="text-center text-danger mb-4">Incorrect Credentials</h5>
+
+      <% } else if (typeof accountcreated !== 'undefined') { %>
+
+        <h5 class="text-center text-success mb-4">Account Created</h5>
+
+      <% } %>
 
       <div class="form-label-group">
         <input type="email" id="inputEmail" class="form-control" placeholder="Email address" name="email" required autofocus>
@@ -19,7 +29,7 @@
         <label for="inputPassword">Password</label>
       </div>
       <button class="btn btn-lg btn-primary btn-block w-100" type="submit">Sign in</button>
-      <p class="mt-5 mb-3 text-muted text-center">&copy; 2021 Sean McGinty | <a href="../">Homepage</a></p>
+      <p class="mt-5 mb-3 text-muted text-center">&copy; 2021 Sean McGinty | <a href="./register">Register</a> | <a href="../">Homepage</a></p>
     </form>
 </body>
 </html> 
