@@ -80,7 +80,6 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
 
         message = new Uint8Array(message);
-        console.log(message);
 
         if (message[0] === undefined) {
             return;
@@ -224,6 +223,13 @@ app.get('/register', (req, res) => {
     res.render(path.join(__dirname, '/views/register'), props);
 })
 
+app.get('/logout', (req, res) => {
+    if (req.session.loggedin) {
+        req.session.destroy();
+    }
+    res.redirect('/login');
+})
+
 app.get('/game', (req, res) => {
     if (req.session.loggedin) {
         res.render(path.join(__dirname, '/views/game'), {
@@ -232,6 +238,12 @@ app.get('/game', (req, res) => {
     } else {
 		res.redirect('/login');
 	}
+})
+
+app.get('/ui', (req, res) => {
+    res.render(path.join(__dirname, '/views/ui'), {
+        title: 'UI'
+    });
 })
 
 app.get('/shop', (req, res) => {

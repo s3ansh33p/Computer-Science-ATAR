@@ -37,7 +37,7 @@ function _processFile(filePath, watchEvent) {
         return;
     }
     
-    if (filePath.match(/\.html$/)) {
+    if (filePath.match(/\.ejs$/)) {
         if (watchEvent === 'change') {
             return _handleViews(filePath, watchEvent);
         }

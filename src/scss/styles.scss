@@ -572,6 +572,106 @@ body.center {
     
 }
 
+#ui {
+
+   .progress {
+       height: 0.5rem;
+   }
+
+   .md-image {
+        height: 50px;
+        width: 50px;
+
+        &.friend-image {
+            border: 1.5px solid;
+        }
+   }
+
+   .friend-list {
+
+        overflow-x: auto;
+        height: 250px;
+
+        .online {
+            color: lime;
+        }
+
+        .offline {
+            color: var(--grey-300);
+        }
+
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--grey-900); 
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--grey-300); 
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--grey-400); 
+    }
+
+}
+
+:root {
+    --grey-100: #FCFCFC;
+    --grey-200: #C7C7C7;
+    --grey-300: #888888;
+    --grey-400: #585858;
+    --grey-500: #424242;
+    --grey-600: #383C3F;
+    --grey-700: #21272D;
+    --grey-800: #1D1D1D;
+    --grey-900: #0E0E0E;
+}
+
+.bg-100 {
+    background-color: var(--grey-100);
+}
+
+.bg-200 {
+    background-color: var(--grey-200);
+}
+
+.bg-300 {
+    background-color: var(--grey-300);
+}
+
+.bg-400 {
+    background-color: var(--grey-400);
+}
+
+.bg-500 {
+    background-color: var(--grey-500);
+}
+
+.bg-600 {
+    background-color: var(--grey-600);
+}
+
+.bg-700 {
+    background-color: var(--grey-700);
+}
+
+.bg-800 {
+    background-color: var(--grey-800);
+}
+
+.bg-900 {
+    background-color: var(--grey-900);
+}
+
+.h-24 {
+    height: 24px;
+}
+
 input:focus-visible {
     outline: none;
 }
