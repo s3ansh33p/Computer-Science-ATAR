@@ -99,11 +99,17 @@ Start the server
   npm run start
 ```
 
+Note: I am running this on Linux RHEL 8 + NGINX so make sure that you have ssl configured if you are using the example .conf files. You can use certbot to get the letsencrypt certs.
+```bash
+  certbot certonly -d yourwebsite
+  certbot certonly -d socket.yourwebsite
+```
+
   
 ## Tech Stack
 
 **Client:** ThreeJS, Bootstrap
 
-**Server:** Node, Express, MySQL
+**Server:** Node, Express, MySQL, NGINX
 
 **Languages:** HTML, CSS, SCSS, JS, EJS, SQL
