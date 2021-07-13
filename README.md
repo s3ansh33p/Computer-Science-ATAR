@@ -39,6 +39,10 @@ To run this project, you will need to add the following environment variables to
 
 `ENC_IV` - crypto.randomBytes(16).toString('hex')
 
+`EXPRESS_PORT` - 3000
+
+`WS_PORT` - 8999
+
 
   
 ## Features

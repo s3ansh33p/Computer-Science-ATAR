@@ -9,10 +9,10 @@ const { encrypt } = require('./server/aes');
 
 const app = express();
 const connection = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-	password : '',
-	database : 'csc'
+	host     : process.env.MYSQL_HOST || 'localhost',
+	user     : process.env.MYSQL_USERNAME || 'root',
+	password : process.env.MYSQL_PASSWORD || '',
+	database : process.env.MYSQL_DATABASE || 'csc'
 });
 
 /**
@@ -20,14 +20,14 @@ const connection = mysql.createConnection({
  * @constant {number} port An integer value between 1024 and 49151
  * @see https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
  */
-const port = 3000;
+const port = process.env.EXPRESS_PORT || 3000;
 
 /**
  * Port for the websocket to run on
  * @constant {number} wsport An integer value between 1024 and 49151
  * @see https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 */
-const wsport = 8999;
+const wsport = process.env.WS_PORT || 8999;
 
 // Routing for static files such as the css styling and three.js files
 app.use(express.static(__dirname + '/public'));
@@ -262,7 +262,7 @@ app.post('/auth', function(req, res) {
     const password = req.body.password;
 	if (email && password) {
         const hash = encrypt(Buffer.from(password, 'utf8'));
-		connection.query('SELECT * FROM users WHERE email = ? AND password = ?', [email, hash], function(error, results, fields) {
+		connection.query('SELECT * FROM users WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
 			if (results.length > 0) {
 				req.session.loggedin = true;
 				req.session.email = email;
@@ -291,7 +291,7 @@ app.post('/auth-register', function(req, res) {
 			    res.end();
 			} else {
                 const hash = encrypt(Buffer.from(password, 'utf8'));
-                connection.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, hash], function(error, results, fields) {
+                connection.query('INSERT INTO users (username, email, pass) VALUES (?, ?, ?)', [username, email, hash], function(error, results, fields) {
                     req.session.accountcreated = true;
                     res.redirect('/login');
 			        res.end();
