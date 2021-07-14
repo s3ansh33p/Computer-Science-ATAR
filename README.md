@@ -43,6 +43,8 @@ To run this project, you will need to add the following environment variables to
 
 `WS_PORT` - 8999
 
+`NODE_ENV` - development
+
 
   
 ## Features

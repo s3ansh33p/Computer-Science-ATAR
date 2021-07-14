@@ -231,7 +231,7 @@ app.get('/logout', (req, res) => {
 })
 
 app.get('/game', (req, res) => {
-    if (req.session.loggedin) {
+    if (req.session.loggedin || process.env.NODE_ENV === 'development') { // Skip auth if in development mode
         res.render(path.join(__dirname, '/views/game'), {
             title: 'Game'
         });

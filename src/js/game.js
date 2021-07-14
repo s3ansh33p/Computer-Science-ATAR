@@ -417,6 +417,30 @@ loader.load( 'gun.glb', ( gltf ) => {
 
 } );
 
+let playerModel = 0; // could be just 'let playerModel;'
+let mixer; // Getting a basic animation working
+let animations;
+loader.load( 'basicperson.glb', ( gltf ) => {
+
+    playerModel = gltf.scene;
+    scene.add( playerModel );
+    playerModel.position.set(-5,2,36);
+    playerModel.scale.set(0.06,0.06,0.06);
+    
+    mixer = new THREE.AnimationMixer(playerModel);
+    animations = gltf.animations;
+} );
+
+// callable from the main console with globalHandlers.play()
+function playAnim() {
+    mixer.clipAction(animations[0]).play()
+}
+
+// callable from the main console with globalHandlers.stop()
+function pauseAnim() {
+    mixer.clipAction(animations[0]).stop()
+}
+
 loader.load( 'scene.glb', ( gltf ) => {
 
     scene.add( gltf.scene );
@@ -533,9 +557,17 @@ function animate() {
 
     transferData()
 
+    if ( mixer ) {
+
+        mixer.update( deltaTime );
+
+    }
+
     requestAnimationFrame( animate );
 
 }
 
-window.mynamespace = window.mynamespace || {};
-mynamespace.animate = function() {animate()}
+window.globalHandler = window.globalHandler || {};
+globalHandler.animate = function() {animate()}
+globalHandler.play = function() {playAnim()}
+globalHandler.stop = function() {pauseAnim()}

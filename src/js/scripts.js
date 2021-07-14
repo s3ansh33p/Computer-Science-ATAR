@@ -407,8 +407,8 @@ function joinGame() {
 
     setTimeout(() => {
         inGame = true;
-        window.mynamespace = window.mynamespace || {};
-        mynamespace.animate();
+        window.globalHandler = window.globalHandler || {};
+        globalHandler.animate();
     }, 400);
 
     setTimeout(() => {

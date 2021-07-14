@@ -590,7 +590,7 @@ body.center {
    .friend-list {
 
         overflow-x: auto;
-        height: 250px;
+        height: calc(100vh - 350px);
 
         .online {
             color: lime;
