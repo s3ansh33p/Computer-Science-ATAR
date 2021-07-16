@@ -15,3 +15,7 @@ window.addEventListener('DOMContentLoaded', event => {
     }
 
 });
+
+const joinGameBtn = () => {
+    window.location.href = "./game";
+}

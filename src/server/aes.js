@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 require('dotenv').config( { 'path': __dirname+'/../.env' });
 const algorithm = 'aes-256-ctr';
-const secretKey = process.env.ENC_KEY; // crypto.randomBytes(16).toString('hex')
-const iv = Buffer.from(process.env.ENC_IV, 'hex'); // crypto.randomBytes(16).toString('hex')
+const secretKey = process.env.ENC_KEY || '2296360cf07bd1cf921bf6e941bbb7c4'; // crypto.randomBytes(16).toString('hex')
+const iv = Buffer.from(process.env.ENC_IV || '26845fd69034937fb7c05846d2337720', 'hex'); // crypto.randomBytes(16).toString('hex')
 
 const encrypt = (text) => {
 
