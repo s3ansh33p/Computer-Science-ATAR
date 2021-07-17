@@ -43,10 +43,7 @@ function sendData(data) {
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
-        console.log(
-            `%c[System]%c Malformed data: ${JSON.stringify(data)}`,
-            "color: #fff000;",""
-        );
+        globalHandler.log(`Malformed data: ${JSON.stringify(data)}`, "Network")
         return;
 
     } else {
@@ -159,28 +156,6 @@ function timerEnd(name) {
 timer('connectionMS');
 
 /**
- * Returns a string representation of seconds into "minutes:seconds"
- * @author  Sean McGinty <newfolderlocation@gmail.com>
- * @param   {number} s The number of seconds in to evaluate
- * @returns {string} The evaluated string
- * @version 1.0
- * @example
- * getGameLength(522)
- * Returns "8:42"
- */
-const getGameLength = (s) => {
-    return (s === undefined) ? "0:00" : (
-        (s < 10) ? '0:0'+s : (
-            (s < 60) ? '0:'+s : (
-                parseInt(s/60)+':'+(s % 60 < 10 ? "0"+(s % 60) :
-                    (s % 60)
-                )
-            )
-        )
-    ).toString();
-}
-
-/**
  * Callback function that is called when the client receives a message from the server
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} event The message contents
@@ -266,10 +241,7 @@ server.onmessage = function (event) {
 
         default:
 
-            console.log(
-                `%c[System]%c Malformed packet: ${Uint8View}`,
-                "color: #fff000;",""
-            );
+            globalHandler.log(`Malformed packet: ${Uint8View}`, "Network")
 
     }
 
@@ -394,6 +366,9 @@ document.addEventListener('keydown',function (e) {
 
 })
 
+let gameTime = 10;
+let gameTimers;
+
 /**
  * Join a game
  * @author  Sean McGinty <newfolderlocation@gmail.com>
@@ -405,9 +380,15 @@ function joinGame() {
 
     document.getElementById('loader').classList.add('fade');
 
+    // Temporarily set tab mode info
+    setTabMode(0, "Deathmatch") // Mode
+    setTabMode(1, "Dust II") // Map
+    gameTimers = setInterval(() => {
+        updateGameTimers();
+    }, 1000); // Timer
+
     setTimeout(() => {
         inGame = true;
-        window.globalHandler = window.globalHandler || {};
         globalHandler.animate();
     }, 400);
 
@@ -416,3 +397,65 @@ function joinGame() {
     }, 2500);
 
 }
+
+/**
+ * Update the game timer
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function updateGameTimers() {
+    gameTime--;
+    setTabMode(2, gameTime) // Tab mode timer
+    if (gameTime === 0) clearInterval(gameTimers);
+}
+
+/**
+ * Returns a string representation of seconds into "minutes:seconds"
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number} s The number of seconds in to evaluate
+ * @returns {string} The evaluated string
+ * @version 1.1
+ * @example
+ * getGameLength(522)
+ * Returns "8:42"
+ */
+ const getGameLength = (s) => {
+    return (s === undefined || s <= 0) ? "0:00" : (
+        (s < 10) ? '0:0'+s : (
+            (s < 60) ? '0:'+s : (
+                parseInt(s/60)+':'+(s % 60 < 10 ? "0"+(s % 60) :
+                    (s % 60)
+                )
+            )
+        )
+    ).toString();
+}
+
+/**
+ * Update game information in the tab ui
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number} identifier The element index within the tab-mode div to change.
+ * @param   {string|number} content The content to change the game tab ui to. Uses a number if identifier is 2 for updating the game timer
+ * @returns {void}
+ * @version 1.0
+ */
+function setTabMode(identifier, content) {
+    document.getElementById('tab-mode').children[identifier].innerText = (identifier === 2) ? getGameLength(content) : content;
+}
+
+/**
+ * Display a game alert
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {string} content The text shown in the alert
+ * @returns {void}
+ * @version 1.0
+ */
+function sendGameAlert(content) {
+    document.getElementById('game-alert').innerHTML = `<div class="alert-container d-flex flex-column align-items-center justify-content-center">
+    <h3 class="text-danger mb-0">Alert</h3>
+    <h6>${content}</h6>
+</div>`
+}
+
+window.globalHandler = window.globalHandler || {};

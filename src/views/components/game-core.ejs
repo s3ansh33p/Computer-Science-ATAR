@@ -5,12 +5,43 @@
     </div>
     <p class="loading-item">Loading...</p>
 </div>
-<!-- https://codepen.io/Boogiesox/pen/MYbWrj -->
+
 <div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div>
+
 <div id="chat">
     <div id="chat-msg-container"></div>
     <input id="chat-input" placeholder="Chat" type="text" class="input" name="message">
 </div>
+
+<div id="health-container">
+    <h3 id="health-stat">+ 100</h3>
+    <h3 id="armour-stat" class="ms-4">X 100</h3>
+</div>
+
+<div id="weapon-container" class="d-flex flex-column align-items-end justify-content-end">
+    <div id="weapon-primary">
+        <h3>Rifle</h3>
+    </div>
+    <div id="weapon-secondary">
+        <h3>Pistol</h3>
+    </div>
+    <div id="weapon-knife">
+        <h3>Knife</h3>
+    </div>
+    <div id="weapon-grenades">
+        <h3>Grenades</h3>
+    </div>
+    <div id="weapon-bomb">
+        <h3>Bomb</h3>
+    </div>
+    <span class="d-flex align-items-end justify-content-end">
+        <h3>20</h3>
+        <h5>/120</h5>
+    </span>
+</div>
+
+<div id="game-alert"></div>
+
 <div id="container"></div>
 <div class="tab-container" style="display: none;">
     <div class="tab-scores">
@@ -20,7 +51,11 @@
             Suicide: -1 Kills
             Scoring Flag: +5
         -->
-        <h2 id="tab-mode">Mode Loading... | Map Loading... | 9:59</h2>
+        <div id="tab-mode" class="d-flex justify-content-between w-100">
+            <h2>Mode Loading</h2>
+            <h2>Map Loading</h2>
+            <h2>Time Loading</h2>
+        </div>
         <table>
             <tbody>
                 <tr>

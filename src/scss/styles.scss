@@ -339,10 +339,60 @@ body.center {
         pointer-events: none;
         z-index: 1; /* TODO Solve this in HTML */
     }
+
+    #health-container {
+        position: absolute;
+        bottom: 20px;
+        left: 40px;
+        padding: 8px;
+        display: flex;
+    }
+
+    #weapon-container {
+        position: absolute;
+        bottom: 20px;
+        right: 40px;
+        padding: 8px;
+    }
+
+    #game-alert {
+        position: absolute;
+        bottom: 25%;
+        width: 100%;
+
+        .alert-container {
+            background: linear-gradient(90deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0) 70%);
+            padding: 5px 0;
+            opacity: 0;
+            animation-name: fadeInOut;
+            animation-duration: 5s;
+            animation-fill-mode: forwards;
+
+            @keyframes fadeInOut{
+                0% {
+                    opacity: 0;
+                }
+                25% {
+                    opacity: 1;
+                }
+                75% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+        }
+
+        h3 {
+            font-weight: bold;
+        }
+    }
     
     #chat {
         position: absolute;
-        top: 45px;
+        bottom: 100px;
+        left: 40px;
         width: 200px;
         padding: 8px;
         box-sizing: border-box;
@@ -365,6 +415,7 @@ body.center {
             direction: rtl;
             height: 400px;
             overflow: hidden;
+            width: 400px;
 
             .chat-wrapper {
 
@@ -465,6 +516,7 @@ body.center {
             justify-content: center;
             text-align: center;
             flex-direction: column;
+            padding: 20px;
 
             .spacer {
                 height: 5px;

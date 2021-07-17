@@ -24,10 +24,7 @@ var manager = new THREE.LoadingManager();
  */
 manager.onProgress = function ( item, loaded, total ) {
   document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total * 100)*1000)/1000}%`; 
-  console.log(
-    `%c[Loader]%c ${document.getElementsByClassName('loading-item')[0].innerText}`,
-    "color: #fff000;",""
-  );
+  globalHandler.log(document.getElementsByClassName('loading-item')[0].innerText, "Loader")
   document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
   if (loaded === total) {
       setTimeout(() => {
@@ -568,6 +565,21 @@ function animate() {
 }
 
 window.globalHandler = window.globalHandler || {};
-globalHandler.animate = function() {animate()}
-globalHandler.play = function() {playAnim()}
-globalHandler.stop = function() {pauseAnim()}
+globalHandler.animate = () => animate();
+globalHandler.play = () => playAnim();
+globalHandler.stop = () => pauseAnim();
+
+/**
+ * Send a log event to the console with styling
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {string} content The text shown in the log
+ * @param   {string} title The title / category of the log
+ * @returns {void}
+ * @version 1.0
+ */
+globalHandler.log = (content, title="System") => {
+    console.log(
+        `%c[${title}]%c ${content}`,
+        "color: #fff000;",""
+    );
+}
