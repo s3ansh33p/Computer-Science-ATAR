@@ -417,7 +417,7 @@ loader.load( 'gun.glb', ( gltf ) => {
 let playerModel = 0; // could be just 'let playerModel;'
 let mixer; // Getting a basic animation working
 let animations;
-loader.load( 'basicperson.glb', ( gltf ) => {
+loader.load( 'player_t.glb', ( gltf ) => {
 
     playerModel = gltf.scene;
     scene.add( playerModel );
@@ -475,6 +475,7 @@ loader.load( 'scene.glb', ( gltf ) => {
 } );
 
 // Testing Cube
+// todo: need to rework how the extra players are 'added' into the scene
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
 const cube = new THREE.Mesh( geometry, material );
@@ -491,10 +492,10 @@ scene.add( cube2 );
 function transferData() {
     // Render received data
     if (!connectedToServer) return;
-    let cubes = [cube, cube2]
+    let cubes = [playerModel, cube, cube2]
     for (let i=0; i<otherPlayers.length; i++) {
         
-        cubes[i].position.set(otherPlayers[i].x || 0, otherPlayers[i].y || 0, otherPlayers[i].z || 0);
+        cubes[i].position.set(otherPlayers[i].x || 0, otherPlayers[i].y - 1 || 0, otherPlayers[i].z || 0);
         cubes[i].rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
     }
 
