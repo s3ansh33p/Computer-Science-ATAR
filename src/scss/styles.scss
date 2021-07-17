@@ -639,9 +639,12 @@ body.center {
         }
    }
 
+   .release-notes {
+       height: calc(100vh - 68px);
+   }
+
    .friend-list {
 
-        overflow-x: auto;
         height: calc(100vh - 350px);
 
         .online {
