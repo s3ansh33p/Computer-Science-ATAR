@@ -55,6 +55,7 @@ function sendData(data) {
     if (byteData[0] === 1) {
 
         byteData.push(Array.from(new TextEncoder().encode(data.data)));
+        if (byteData.length > 200) byteData = byteData.slice(0,200); // Prevent sending huge amounts of data - need to implement a cooldown feature too
 
     } else if (byteData[0] === 2) {
 
@@ -268,10 +269,7 @@ function ping() {
         sendData({'type': 'ping'})
 
         tm = setTimeout(function () {
-            console.log(
-                `%c[System]%c Connection Timed Out`,
-                "color: #fff000;",""
-            );
+            globalHandler.log(`Connection Timed Out`)
             connectedToServer = false;
         }, 10000);
 
@@ -357,16 +355,13 @@ document.addEventListener('keydown',function (e) {
     } else if (e.code === "Escape") {
 
         e.preventDefault();
-        console.log(
-            `%c[System]%c Display settings menu`,
-            "color: #fff000;",""
-        );
+        globalHandler.log(`Display Settings Menu`,`Debug`)
 
     }
 
 })
 
-let gameTime = 10;
+let gameTime = 4;
 let gameTimers;
 
 /**
@@ -407,7 +402,10 @@ function joinGame() {
 function updateGameTimers() {
     gameTime--;
     setTabMode(2, gameTime) // Tab mode timer
-    if (gameTime === 0) clearInterval(gameTimers);
+    if (gameTime === 0) {
+        clearInterval(gameTimers);
+        globalHandler.gameEndScreen() // transition to the game end screen showing scores etc.
+    }
 }
 
 /**

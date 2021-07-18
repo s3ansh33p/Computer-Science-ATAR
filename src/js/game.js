@@ -57,6 +57,9 @@ const clock = new THREE.Clock();
 const scene = new THREE.Scene();
 scene.background = new THREE.Color( 0x88ccff );
 
+const scene2 = new THREE.Scene();
+scene2.background = new THREE.Color( 0xff7700 );
+
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 camera.rotation.order = 'YXZ';
 
@@ -428,12 +431,12 @@ loader.load( 'player_t.glb', ( gltf ) => {
     animations = gltf.animations;
 } );
 
-// callable from the main console with globalHandlers.play()
+// callable from the main console with globalHandler.play()
 function playAnim() {
     mixer.clipAction(animations[0]).play()
 }
 
-// callable from the main console with globalHandlers.stop()
+// callable from the main console with globalHandler.stop()
 function pauseAnim() {
     mixer.clipAction(animations[0]).stop()
 }
@@ -534,53 +537,123 @@ function transferData() {
 /**
  * Frame handler
  * @author  https://github.com/mrdoob/three.js
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @returns {void}
- * @version 1.0
+ * @version 1.1
  */
 function animate() {
 
     if (!inGame) return;
 
     const deltaTime = Math.min( 0.1, clock.getDelta() );
-
-    controls( deltaTime );
     
-    updatePlayer( deltaTime );
-    
-    updateSpheres( deltaTime );
+    if ( globalHandler.gameProps.state === 'end' ) {
 
-    renderer.render( scene, camera );
+        renderer.render( scene2, camera );
 
-    stats.update();
+    } else {
+        
+        controls( deltaTime );
+            
+        updatePlayer( deltaTime );
+            
+        updateSpheres( deltaTime );
 
-    transferData()
+        renderer.render( scene, camera );
+        
+        if ( mixer ) {
+            
+            mixer.update( deltaTime );
+            
+        }
 
-    if ( mixer ) {
-
-        mixer.update( deltaTime );
+        transferData();
 
     }
+    
+    stats.update();
 
     requestAnimationFrame( animate );
 
 }
 
+/**
+ * A globally accessable object for running functions
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @namespace   globalHandler
+ * @version     1.1
+ */
 window.globalHandler = window.globalHandler || {};
+
+/**
+ * A function in globalHandler (globalHandler.animate)
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
 globalHandler.animate = () => animate();
+
+/**
+ * A function in globalHandler (globalHandler.play)
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
 globalHandler.play = () => playAnim();
+
+/**
+ * A function in globalHandler (globalHandler.stop)
+ * @author       Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
 globalHandler.stop = () => pauseAnim();
 
 /**
- * Send a log event to the console with styling
- * @author  Sean McGinty <newfolderlocation@gmail.com>
- * @param   {string} content The text shown in the log
- * @param   {string} title The title / category of the log
- * @returns {void}
- * @version 1.0
+ * An object to store the properties of the game
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @property    {object}  globalHandler.gameProps             Game properties store on the client side
+ * @property    {'start'|'end'} globalHandler.gameProps.state The state of the game to determine what to render
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.gameProps = {
+    'state': 'start'
+};
+
+/**
+ * A function in globalHandler (globalHandler.log) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @param       {string} content The text shown in the log
+ * @param       {string} title The title / category of the log
+ * @returns     {void}
+ * @version     1.1
  */
 globalHandler.log = (content, title="System") => {
     console.log(
         `%c[${title}]%c ${content}`,
         "color: #fff000;",""
     );
+}
+
+/**
+ * A function in globalHandler (globalHandler.log) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.1
+ */
+globalHandler.gameEndScreen = () => {
+    globalHandler.log(`Transitioning to end game screen`);
+    const transition = document.getElementById('scene-transition');
+    transition.classList.add('active');
+    setTimeout(() => {
+        globalHandler.gameProps.state = 'end';
+        scene.remove.apply(scene, scene.children); // Remove the main scene
+    }, 1500);
 }

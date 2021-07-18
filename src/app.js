@@ -91,7 +91,7 @@ wss.on('connection', (ws) => {
 
         } else if (message[0] === 1) {
 
-            wss.broadcast({'message':message.slice(1),'client':ws.id}, 3)
+            wss.broadcast({'message':message.slice(1,201),'client':ws.id}, 3)
 
         } else if (message[0] === 2) {
 
