@@ -361,7 +361,7 @@ document.addEventListener('keydown',function (e) {
 
 })
 
-let gameTime = 4;
+let gameTime = 600;
 let gameTimers;
 
 /**

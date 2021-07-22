@@ -240,12 +240,6 @@ app.get('/game', (req, res) => {
 	}
 })
 
-app.get('/ui', (req, res) => {
-    res.render(path.join(__dirname, '/views/ui'), {
-        title: 'UI'
-    });
-})
-
 app.get('/shop', (req, res) => {
     res.render(path.join(__dirname, '/views/shop'), {
         title: 'Shop'
@@ -263,9 +257,17 @@ app.post('/auth', function(req, res) {
 	if (email && password) {
         const hash = encrypt(Buffer.from(password, 'utf8'));
 		connection.query('SELECT * FROM users WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
+            if (error) throw error;
 			if (results.length > 0) {
 				req.session.loggedin = true;
 				req.session.email = email;
+                req.session.username = results[0].username;
+                req.session.avatar = results[0].avatar;
+                req.session.registered = results[0].registered;
+                req.session.curRank = results[0].curRank;
+                if (results[0].isAdmin) {
+                    req.session.admin = true;
+                }
 				res.redirect('/home');
 			} else {
                 req.session.loginerror = true;
@@ -305,10 +307,14 @@ app.post('/auth-register', function(req, res) {
 });
 
 app.get('/home', function(req, res) {
-	if (req.session.loggedin) {
-		res.send('Welcome back, ' + req.session.email + '!');
+	if (req.session.loggedin || process.env.NODE_ENV === 'development') {
+		res.render(path.join(__dirname, '/views/ui'), {
+            title: 'Home',
+            session: req.session,
+            ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max']
+        });
 	} else {
-		res.send('Please login to view this page!');
+        res.redirect('/login');
 	}
 	res.end();
 });

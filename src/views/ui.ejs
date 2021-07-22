@@ -53,10 +53,10 @@
                         </div>
                         <div class="row mb-1">
                             <div class="col col-6">
-                                <img src="./assets/author.png" class="w-100" alt="...">
+                                <img src="<%= (session.avatar === null) ? './assets/author.png' : session.avatar %>" class="w-100" alt="...">
                             </div>
                             <div class="col col-6 d-flex align-items-center justify-content-center flex-column ps-0">
-                                <h6 class="m-0">s3ansh33p</h6>
+                                <h6 class="m-0"><%= session.username %></h6>
                                 <p class="m-0">NONGPEEK</p>
                             </div>
                         </div>
@@ -66,9 +66,9 @@
                             <div class="row">
                                 <div class="d-flex flex-nowrap align-items-center mb-2">
                                     <img src="./assets/author.png" class="md-image p-0" alt="...">
-                                    <p class="mb-0 ms-2">Gold VII</p>
+                                    <p class="mb-0 ms-2"><%= ranks[session.curRank]; %></p>
                                 </div>
-                                <p class="mb-2">Next Platinum VIII</p>
+                                <p class="mb-2"><%= ranks[session.curRank+1]; %></p>
                             </div>
                             <div class="progress bg-900">
                                 <div class="progress-bar bg-warning" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>

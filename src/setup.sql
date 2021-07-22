@@ -1,8 +1,7 @@
-/*!
-* Sean McGinty - Computer Science Project v0.0.1 (https://dev.seanmcginty.space)
-* Copyright 2021 Sean McGinty
-* Licensed under MIT (https://github.com/s3ansh33p/computer-science-atar/blob/master/LICENSE)
-*/
+-- Sean McGinty - Computer Science Project v0.0.1 (https://dev.seanmcginty.space)
+-- Copyright 2021 Sean McGinty
+-- Licensed under MIT (https://github.com/s3ansh33p/computer-science-atar/blob/master/LICENSE)
+
 
 CREATE DATABASE IF NOT EXISTS csc;
 USE csc;
@@ -38,11 +37,11 @@ CREATE TABLE IF NOT EXISTS results (
   FOREIGN KEY (gameid) REFERENCES games(id)				
 );
 
-CREATE TABLE IF NOT EXISTS badges {
+CREATE TABLE IF NOT EXISTS badges (
   id int(8) PRIMARY KEY AUTO_INCREMENT NOT NULL,
   badgeName text(64) NOT NULL,
-  badgeAdded timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-}
+  badgeAdded timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS playerBadges (
   id int(8) PRIMARY KEY AUTO_INCREMENT NOT NULL,
