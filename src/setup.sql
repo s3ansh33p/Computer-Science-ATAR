@@ -51,3 +51,13 @@ CREATE TABLE IF NOT EXISTS playerBadges (
   FOREIGN KEY (userid) REFERENCES users(id),
   FOREIGN KEY (badgeid) REFERENCES badges(id)				
 );
+
+CREATE TABLE IF NOT EXISTS friends (
+  id int(8) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+  userid int(8) NOT NULL,
+  friendid int(8) NOT NULL,
+  sentTime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  accepted tinyint(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (userid) REFERENCES users(id),
+  FOREIGN KEY (friendid) REFERENCES users(id)
+)
