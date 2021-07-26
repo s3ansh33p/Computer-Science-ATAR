@@ -60,4 +60,10 @@ CREATE TABLE IF NOT EXISTS friends (
   accepted tinyint(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (userid) REFERENCES users(id),
   FOREIGN KEY (friendid) REFERENCES users(id)
-)
+);
+
+-- Insert testing user data
+INSERT INTO users (username, email, pass, avatar) VALUES ('Ropz', 'test@localhost', 'secret', 'https://gaimer.net/wp-content/uploads/2020/04/ropz-scaled.jpg'), ('Frozen', 'test@localhost', 'secret', 'https://liquipedia.net/commons/images/thumb/2/23/Frozen_EPICENTER_2019.jpg/450px-Frozen_EPICENTER_2019.jpg'), ('Dexter', 'test@localhost', 'secret', 'https://liquipedia.net/commons/images/thumb/6/67/Dexter_Asia_Minor_2019.jpeg/450px-Dexter_Asia_Minor_2019.jpeg'), ('chrisJ', 'test@localhost', 'secret', 'https://liquipedia.net/commons/images/thumb/0/0b/ChrisJ_at_DH_Masters_Marseille_18.jpg/451px-ChrisJ_at_DH_Masters_Marseille_18.jpg'), ('bymas', 'test@localhost', 'secret', 'https://cdn1.dotesports.com/wp-content/uploads/2020/09/02151749/bymas.jpg'), ('acoR', 'test@localhost', 'secret', 'https://liquipedia.net/commons/images/thumb/0/0b/AcoR_%40_IEM_Katowice_2020.jpg/450px-AcoR_%40_IEM_Katowice_2020.jpg'), ('Stewie2k', 'test@localhost', 'secret', 'https://cdn1.dotesports.com/wp-content/uploads/2020/05/20142352/47955079228_116657f760_o.jpg'), ('NadeKing', 'test@localhost', 'secret', 'https://yt3.ggpht.com/ytc/AKedOLSow0ZFWUxs42VHeF9okBlTyFflYAPyAOh4eWSXDA=s900-c-k-c0x00ffffff-no-rj');
+
+-- Insert testing friend data
+INSERT INTO friends (userid, friendid) VALUES (9, 2), (9, 3); -- where 9 is your user

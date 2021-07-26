@@ -77,13 +77,27 @@
                     </div>
                     <div class="card list-group-item border-0 bg-700 text-warning mx-3 m-1 friend-list overflow-auto">
                         <ol class="p-0 m-0">
-                            <li class="d-flex align-items-center my-2 online">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">Decay</p>
-                                <small class="mb-0">Playing <i>My Game</i></small>
-                              </div>
-                            </li>
+                            <% for(var i=0; i < friends.length; i++){ %>
+                                  <li class="d-flex align-items-center my-2 
+                                    <% if(friends[i].online){ %>
+                                        online
+                                    <% } else { %>
+                                        offline
+                                    <% } %>
+                                  ">
+                                    <img src="<%= friends[i].avatar %>" class=" md-image friend-image p-0" alt="...">
+                                  <div class="ms-2">
+                                    <p class="fw-bold mb-0"><%= friends[i].username %></p>
+                                    <small class="mb-0">
+                                    <% if(friends[i].online){ %>
+                                        Playing <i>My Game</i>
+                                    <% } else { %>
+                                        Offline
+                                    <% } %>
+                                    </small>
+                                  </div>
+                                </li>
+                             <% } %>
                             <li class="d-flex align-items-center my-2 online">
                                 <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
                               <div class="ms-2">

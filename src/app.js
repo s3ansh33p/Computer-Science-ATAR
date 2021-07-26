@@ -311,7 +311,18 @@ app.get('/home', function(req, res) {
 		res.render(path.join(__dirname, '/views/ui'), {
             title: 'Home',
             session: req.session,
-            ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max']
+            ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max'],
+            // Run sql
+            // SELECT * from friends f INNER JOIN users u ON u.id = f.friendsid WHERE f.userid = 9;
+            friends: [{
+                'username': 'Decay',
+                'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
+                'online': true
+            },{
+                'username': 'dinrah',
+                'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
+                'online': false
+            }]
         });
 	} else {
         res.redirect('/login');
