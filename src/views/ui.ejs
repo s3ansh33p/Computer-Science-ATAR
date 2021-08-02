@@ -76,28 +76,8 @@
                         </div>
                     </div>
                     <div class="card list-group-item border-0 bg-700 text-warning mx-3 m-1 friend-list overflow-auto">
-                        <ol class="p-0 m-0">
-                            <% for(var i=0; i < friends.length; i++){ %>
-                                  <li class="d-flex align-items-center my-2 
-                                    <% if(friends[i].online){ %>
-                                        online
-                                    <% } else { %>
-                                        offline
-                                    <% } %>
-                                  ">
-                                    <img src="<%= friends[i].avatar %>" class=" md-image friend-image p-0" alt="...">
-                                  <div class="ms-2">
-                                    <p class="fw-bold mb-0"><%= friends[i].username %></p>
-                                    <small class="mb-0">
-                                    <% if(friends[i].online){ %>
-                                        Playing <i>My Game</i>
-                                    <% } else { %>
-                                        Offline
-                                    <% } %>
-                                    </small>
-                                  </div>
-                                </li>
-                             <% } %>
+                        <ol class="p-0 m-0" id="friends">
+                           
                             <li class="d-flex align-items-center my-2 online">
                                 <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
                               <div class="ms-2">
@@ -267,6 +247,34 @@
         </div>
 		
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="js/ui.js"></script>
+        <script>
+            const userid = '<%= session.userID %>';
+            function getFriends() {
+                try {
+                    $.ajax({
+                        url: 'http://localhost:3000/api/friends/'+2,
+                        timeout: 1500,
+                        error: function () {
+                            console.log('Friends API timed out.');
+                        },
+                        success: function (payload) {
+                            console.log('Success');
+                            for (let i=0; i<payload.players.length; i++) {
+                                console.log(payload.players[i]);
+                            }
+                        }
+                    })
+                } catch(err) {
+                    // no 1 cares about err so we ignore it :)
+                    console.log(err);
+                }
+            }
+            $( document ).ready(function() {
+                console.log( "ready!" );
+                getFriends();
+            });
+        </script>
 	</body>
 </html>

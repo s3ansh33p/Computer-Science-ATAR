@@ -246,9 +246,12 @@ app.get('/shop', (req, res) => {
     });
 })
 
-app.get('/api/players/:id', (req, res) => {
-    const players = mysqlGetPlayer(req.params.id);
-    res.json({'players':players});
+app.get('/api/friends/:id', (req, res) => {
+    connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ?', [req.params.id], function(error, results, fields) {
+        if (error) throw error;
+        res.json({'players':results});
+        res.end();
+    });
 })
 
 app.post('/auth', function(req, res) {
@@ -265,6 +268,7 @@ app.post('/auth', function(req, res) {
                 req.session.avatar = results[0].avatar;
                 req.session.registered = results[0].registered;
                 req.session.curRank = results[0].curRank;
+                req.session.userID = results[0].id;
                 if (results[0].isAdmin) {
                     req.session.admin = true;
                 }
@@ -307,23 +311,22 @@ app.post('/auth-register', function(req, res) {
 });
 
 app.get('/home', function(req, res) {
-	if (req.session.loggedin || process.env.NODE_ENV === 'development') {
-		res.render(path.join(__dirname, '/views/ui'), {
+	if (req.session.loggedin) {
+            res.render(path.join(__dirname, '/views/ui'), {
             title: 'Home',
-            session: req.session,
             ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max'],
-            // Run sql
-            // SELECT * from friends f INNER JOIN users u ON u.id = f.friendsid WHERE f.userid = 9;
-            friends: [{
-                'username': 'Decay',
-                'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
-                'online': true
-            },{
-                'username': 'dinrah',
-                'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
-                'online': false
-            }]
+            session: req.session
+            // friends: [{
+            //     'username': 'Decay',
+            //     'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
+            //     'online': true
+            // },{
+            //     'username': 'dinrah',
+            //     'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
+            //     'online': false
+            // }]
         });
+        res.end();
 	} else {
         res.redirect('/login');
 	}
@@ -341,29 +344,3 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`Listening at localhost:${port}`)
 })
-
-/**
- * Returns an object containing player information
- * @author  Sean McGinty <newfolderlocation@gmail.com>
- * @param {number} userid The user's id in the database
- * @returns {Object} Temporary data used for testing until a database is properly implemented
- * @version 1.0
- * @example
- * mysqlGetPlayer(1)
- * Returns {
- *  'id':         1,
- *  'name':       'admin',
- *  'registered': '28/06/21',
- *  'wins':       0,
- *  'losses':     0
-*  }
- */
-function mysqlGetPlayer(userid) {
-    return {
-        'id': userid,
-        'name': 'admin',
-        'registered': '28/06/21',
-        'wins': 0,
-        'losses': 0
-    };
-}

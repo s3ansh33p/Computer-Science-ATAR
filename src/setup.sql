@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
   avatar text(255),
   registered timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   curRank int(1) NOT NULL DEFAULT 0,
-  isAdmin tinyint(1) NOT NULL DEFAULT 0
+  isAdmin tinyint(1) NOT NULL DEFAULT 0,
+  isOnline tinyint(1) NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS games (
