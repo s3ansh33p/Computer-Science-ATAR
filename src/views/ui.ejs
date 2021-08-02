@@ -77,49 +77,6 @@
                     </div>
                     <div class="card list-group-item border-0 bg-700 text-warning mx-3 m-1 friend-list overflow-auto">
                         <ol class="p-0 m-0" id="friends">
-                           
-                            <li class="d-flex align-items-center my-2 online">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">dinrah</p>
-                                <small class="mb-0">Playing <i>My Game</i></small>
-                              </div>
-                            </li>
-                            <li class="d-flex align-items-center my-2 online">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">MrNoots</p>
-                                <small class="mb-0">Playing <i>My Game</i></small>
-                              </div>
-                            </li>
-                            <li class="d-flex align-items-center my-2 offline">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">Jezza</p>
-                                <small class="mb-0">Offline</small> 
-                              </div>
-                            </li>
-                            <li class="d-flex align-items-center my-2 offline">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">Elk</p>
-                                <small class="mb-0">Offline</small>  
-                              </div>
-                            </li>
-                            <li class="d-flex align-items-center my-2 offline">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">Horener</p>
-                                <small class="mb-0">Offline</small> 
-                              </div>
-                            </li>
-                            <li class="d-flex align-items-center my-2 offline">
-                                <img src="./assets/author.png" class=" md-image friend-image p-0" alt="...">
-                              <div class="ms-2">
-                                <p class="fw-bold mb-0">The Jazz Man</p>
-                                <small class="mb-0">Offline</small> 
-                              </div>
-                            </li>
                         </ol>
                     </div>
                 </div>
@@ -254,15 +211,24 @@
             function getFriends() {
                 try {
                     $.ajax({
-                        url: 'http://localhost:3000/api/friends/'+2,
+                        url: 'http://localhost:3000/api/friends/'+userid,
                         timeout: 1500,
                         error: function () {
                             console.log('Friends API timed out.');
                         },
                         success: function (payload) {
                             console.log('Success');
+                            const friendsContainer = document.getElementById('friends');
                             for (let i=0; i<payload.players.length; i++) {
                                 console.log(payload.players[i]);
+                                let onlineText = (payload.players[i].isOnline) ? 'online' : 'offline';
+                                friendsContainer.innerHTML += `<li class="d-flex align-items-center my-2 ${onlineText}">
+                                <img src="${(payload.players[i].avatar != null ) ? payload.players[i].avatar : './assets/author.png'}" class=" md-image friend-image p-0" alt="...">
+                              <div class="ms-2">
+                                <p class="fw-bold mb-0">${payload.players[i].username}</p>
+                                <small class="mb-0">${(payload.players[i].isOnline) ? 'Playing <i>My Game</i>' : 'Offline'}</small>
+                              </div>
+                            </li>`;
                             }
                         }
                     })
