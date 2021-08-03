@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <%- include('./components/header.ejs'); %>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="http://localhost:3000/js/vendor/jquery.terminal.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.x.x/css/jquery.terminal.min.css"/>
+    </head>
+    <body>
+        <div id="terminal"></div>
+<script>
+var term = $('#terminal').terminal({
+    friends: function(userid) {
+        try {
+            $.ajax({
+                url: 'http://localhost:3000/api/friends/'+userid,
+                timeout: 1500,
+                error: function () {
+                    console.log('Friends API timed out.');
+                },
+                success: function (payload) {
+                    if (payload.players.length === 0) {
+                        term.echo(`No friends found for User #${userid}`);
+                    } else {
+                        term.echo(`There were ${payload.players.length} records found for User #${userid}`);
+                        for (let i=0; i<payload.players.length; i++) {
+                            term.echo(`Username: ${payload.players[i].username} | Online: ${payload.players[i].isOnline} | Accepted: ${payload.players[i].accepted}`);
+                        }
+                    }
+                }
+            })
+        } catch(err) {
+            console.log(err);
+        }
+    },
+    close: function(arg1, arg2) {
+        console.log(arg1);
+        console.log(arg2);
+    },
+    help: function() {
+        // To be complteted
+        var div = $(`<span>
+            For more information on a specific command, type help <command-name>
+            <br>ASSOC          Displays or modifies file extension associations.
+            <br>ATTRIB         Displays or changes file attributes.
+            <br>BREAK          Sets or clears extended CTRL+C checking.
+            <br>BCDEDIT        Sets properties in boot database to control boot loading.
+            <br>CACLS          Displays or modifies access control lists (ACLs) of files.
+            <br>CALL           Calls one batch program from another.
+            <br>CD             Displays the name of or changes the current directory.
+            <br>CHCP           Displays or sets the active code page number.
+            <br>CHDIR          Displays the name of or changes the current directory.
+            <br>CHKDSK         Checks a disk and displays a status report.
+            <br>CHKNTFS        Displays or modifies the checking of disk at boot time.
+            <br>CLS            Clears the screen.
+            <br>CMD            Starts a new instance of the Windows command interpreter.
+            <br>COLOR          Sets the default console foreground and background colors.
+        </span>`)
+        this.echo(div);
+    }
+});
+
+term.set_prompt(function(set_prompt) {
+    set_prompt('[[;red;]<%= session.username %>@dev.seanmcginty.space >>> ]');
+});
+</script>
+    </body>
+</html>

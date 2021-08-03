@@ -115,26 +115,3 @@ Note: I am running this on Linux RHEL 8 + NGINX so make sure that you have ssl c
 **Server:** Node, Express, MySQL, NGINX
 
 **Languages:** HTML, CSS, SCSS, JS, EJS, SQL
-
- <% for(var i=0; i < friends.length; i++){ %>
-                                  <li class="d-flex align-items-center my-2 
-                                    <% if(friends[i].online){ %>
-                                        online
-                                    <% } else { %>
-                                        offline
-                                    <% } %>
-                                  ">
-                                    <img src="<%= friends[i].avatar %>" class=" md-image friend-image p-0" alt="...">
-                                  <div class="ms-2">
-                                    <p class="fw-bold mb-0"><%= friends[i].username %></p>
-                                    <small class="mb-0">
-                                    <% if(friends[i].online){ %>
-                                        Playing <i>My Game</i>
-                                    <% } else { %>
-                                        Offline
-                                    <% } %>
-                                    </small>
-                                  </div>
-                                </li>
-                             <% } %>
-                             

@@ -246,12 +246,51 @@ app.get('/shop', (req, res) => {
     });
 })
 
+app.get('/shell', (req, res) => {
+    if (req.session.isAdmin || true) {
+        res.render(path.join(__dirname, '/views/shell'), {
+            title: 'Shell',
+            session: req.session
+        });
+    } else {
+        res.redirect('/403');
+    }
+})
+
 app.get('/api/friends/:id', (req, res) => {
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ?', [req.params.id], function(error, results, fields) {
         if (error) throw error;
         res.json({'players':results});
         res.end();
     });
+})
+
+app.get('/api/updates/:page', (req, res) => {
+    // Get the most recent updates
+    // page defaults to 0 then 1 to get updates 6-10 etc.
+    res.json({
+        'updates': [
+            {
+                'added': 1627890529596,
+                'title': 'Release Notes for 2/8/2021',
+                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
+                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
+            },
+            {
+                'added': 1627890529595,
+                'title': 'Release Notes for 1/8/2021',
+                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
+                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
+            },
+            {
+                'added': 1627890529594,
+                'title': 'Release Notes for 31/7/2021',
+                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
+                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
+            },
+        ]
+    });
+    res.end();
 })
 
 app.post('/auth', function(req, res) {
@@ -269,9 +308,7 @@ app.post('/auth', function(req, res) {
                 req.session.registered = results[0].registered;
                 req.session.curRank = results[0].curRank;
                 req.session.userID = results[0].id;
-                if (results[0].isAdmin) {
-                    req.session.admin = true;
-                }
+                req.session.isAdmin = results[0].isAdmin;
 				res.redirect('/home');
 			} else {
                 req.session.loginerror = true;
@@ -333,11 +370,17 @@ app.get('/home', function(req, res) {
 	res.end();
 });
 
+app.get('/403', (req, res) => {
+    res.status(403).render(path.join(__dirname, '/views/403'), {
+        title: '403'
+    });
+});
+
 // Add a 404 route
 app.get('*', (req, res) => {
     res.status(404).render(path.join(__dirname, '/views/404'), {
         title: '404'
-    })
+    });
 });
 
 // Start the Express Server
