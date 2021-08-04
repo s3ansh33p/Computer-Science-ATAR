@@ -4,28 +4,53 @@
     <%- include('./components/header.ejs'); %>
     <head>
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <script src="http://localhost:3000/js/vendor/jquery.terminal.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.x.x/css/jquery.terminal.min.css"/>
+        <script src="https://cdn.jsdelivr.net/npm/figlet/lib/figlet.js"></script>
+        <script src="<%= type; %>/js/util.js"></script>
+        <script src="<%= type; %>/js/vendor/lolcat.js"></script>
+        <script src="<%= type; %>/js/vendor/jquery.terminal.js"></script>
+        <script src="<%= type; %>/js/vendor/unix_formatting.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.x.x/css/jquery.terminal.min.css"/> 
         <style>
-            .terminal-table > td {
+            .terminal-table td {
                 padding: 5px;
+                border-color: var(--color);
             }
             #terminal {
                 height: 100%;
             }
             :root {
-                --background: black;
+                --background: #000;
+                --color: #aaa;
             }
         </style>
     </head>
     <body>
         <div id="terminal"></div>
 <script>
+const spinner = {"interval": 80,
+    "frames": [
+        "⠋",
+        "⠙",
+        "⠹",
+        "⠸",
+        "⠼",
+        "⠴",
+        "⠦",
+        "⠧",
+        "⠇",
+        "⠏"
+    ]
+}
+let spinnerText = '';
+let animation = false;
+let timer;
+let prompt;
+let frameIndex;
 var term = $('#terminal').terminal({
     friends: function(userid) {
         try {
             $.ajax({
-                url: 'http://localhost:3000/api/friends/'+userid,
+                url: '<%= type; %>/api/friends/'+userid,
                 timeout: 1500,
                 error: function () {
                     console.log('Friends API timed out.');
@@ -46,66 +71,293 @@ var term = $('#terminal').terminal({
         }
     },
     color: function(arg) {
-        const colors = ['black','red','blue'];
-        if (colors[arg] === undefined) {
-            term.echo(`Invalid argument "${arg}"`);
+        if (arg === undefined) {
+            document.documentElement.style.setProperty('--background', '#000');            
+            document.documentElement.style.setProperty('--color', '#aaa');            
         } else {
-            document.documentElement.style.setProperty('--background', colors[arg]);
+            if (arg.length !== 2 || !isHex(arg[0]) || !isHex(arg[1])) {
+                term.exec('help color');
+            } else {
+                const colors = ['#000','#00f','#080','#0ff','#ff0','#f0f','#ff0','#fff','#aaa','#0cf','#0f0','#eff','#f44','#b7f','#ff8'];
+                document.documentElement.style.setProperty('--background', colors[parseInt(arg[0],16)]);
+                document.documentElement.style.setProperty('--color', colors[parseInt(arg[1],16)]);
+            }
         }
     },
     close: function(arg1, arg2) {
         console.log(arg1);
         console.log(arg2);
     },
-    help: function() {
-        // To be complteted
-        const commands = [
-            {
-                'name': 'CALL',
-                'descriptor': 'Calls on batch program from another.'
-            },{
-                'name': 'CD',
-                'descriptor': 'Displays the name of or changes the current directory.'
-            },{
-                'name': 'CLEAR',
-                'descriptor': 'Clears the screen.'
-            },{
-                'name': 'COLOR',
-                'descriptor': 'Sets the default console foreground and background colors.'
-            },{
-                'name': 'EXIT',
-                'descriptor': 'Exits the current interpreter.'
-            },{
-                'name': 'FRIENDS',
-                'descriptor': 'Returns friends through the internal API.'
+    help: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            let commandContainer = `<span>
+                For more information on a specific command, type help 'command-name'<br><br>
+                <table class="terminal-table">
+                    <tbody>`;
+            for (let i=0; i<commands.length; i++) {
+                commandContainer += `<tr>
+                            <td>
+                                ${commands[i].name}
+                            </td>
+                            <td>
+                                ${commands[i].descriptor}
+                            </td>
+                        </tr>`;
             }
-        ];
-        let commandContainer = `<span>
-            For more information on a specific command, type help 'command-name'<br>
-            <table>
-                <tbody>`;
-        for (let i=0; i<commands.length; i++) {
-            commandContainer += `<tr class="terminal-table">
-                        <td>
-                            ${commands[i].name}
-                        </td>
-                        <td>
-                            ${commands[i].descriptor}
-                        </td>
-                    </tr>`;
-        }
 
-        commandContainer += `</tbody>
-            </table>
-        </span>`;
-        const div = $(commandContainer);
-        this.echo(div);
+            commandContainer += `</tbody>
+                </table>
+            </span><br>`;
+            const div = $(commandContainer);
+            this.echo(div);
+        } else {
+            let valid = false;
+            let validIndex = -1;
+            for (let i=0; i<commands.length; i++) {
+                if (commands[i].name === options[0].toUpperCase()) {
+                    valid = true;
+                    validIndex = i;
+                }
+            }
+            if (!valid) {
+                this.echo('Not a valid command')
+            } else {
+                let argsText = '';
+                let argsDescriptors = '';
+                if (commands[validIndex].arguments !== undefined) {
+                    for (let i=0; i<commands[validIndex].arguments.length; i++) {
+                        argsText += `${commands[validIndex].name} [${Object.getOwnPropertyNames(commands[validIndex].arguments[i]).toString()}]<br>`;
+                        argsDescriptors += `${Object.getOwnPropertyNames(commands[validIndex].arguments[i]).toString()} - ${commands[validIndex].arguments[i][Object.getOwnPropertyNames(commands[validIndex].arguments[i])]}<br>`;
+                    }
+                }
+                let commandContainer = `<span>
+                    ${commands[validIndex].descriptor}<br>
+                    ${(argsText !== '') ? '<br>'+argsText : ''}
+                    ${(argsDescriptors !== '') ? '<br>'+argsDescriptors : ''}
+                    ${(commands[validIndex].extra !== undefined) ? `<br>${commands[validIndex].extra}<br>` : ''}
+                    ${(commands[validIndex].example !== undefined) ? `<br>Example: ${commands[validIndex].example}<br>` : ''}
+                    <br>
+                </span>`;
+                const div = $(commandContainer);
+                this.echo(div);
+            }
+        }
+    },
+    live: function() {
+        // Todo: create API for info
+        spinnerText = 'Fetching live data from internal APIs';
+        start();
+        setTimeout(() => {
+            spinnerText = 'Pass 1/4';
+        }, 400);
+        setTimeout(() => {
+            spinnerText = 'Pass 2/4';
+        }, 600);
+        setTimeout(() => {
+            spinnerText = 'Pass 3/4';
+        }, 1100);
+        setTimeout(() => {
+            spinnerText = 'Pass 4/4';
+        }, 1600);
+        setTimeout(() => {
+            spinnerText = 'Tabulating data';
+        }, 2100);
+        setTimeout(() => {
+            end();
+            this.echo($(`<span>Live statistics as at ${new Date().toLocaleTimeString()}<br><br>Online Players: 13<br>Active Games: 2<br><br>Total Players: 42<br>Total Games: 14</span>`));
+        }, 2900);
+    },
+    sudo: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            this.exec('help sudo');
+        } else {
+            term.pause();
+            $.post('<%= type; %>/shell/sudo', {command: options.join(' ')}).then(function(response) {
+                term.echo(response).resume();
+            });
+        }       
     }
+}, {
+    checkArity: false,
+    keydown: function(e) {
+        if (animation) {
+            return false;
+        }
+    }
+});
+
+const keywordsMySQL = [
+    'ACCESSIBLE', 'ADD', 'ALL', 'ALTER', 'ANALYZE', 'AND', 'AS', 'ASC',
+    'ASENSITIVE', 'BEFORE', 'BETWEEN', 'BIGINT', 'BINARY', 'BLOB',
+    'BOTH', 'BY', 'CALL', 'CASCADE', 'CASE', 'CHANGE', 'CHAR',
+    'CHARACTER', 'CHECK', 'COLLATE', 'COLUMN', 'CONDITION',
+    'CONSTRAINT', 'CONTINUE', 'CONVERT', 'CREATE', 'CROSS',
+    'CURRENT_DATE', 'CURRENT_TIME', 'CURRENT_TIMESTAMP', 'CURRENT_USER',
+    'CURSOR', 'DATABASE', 'DATABASES', 'DAY_HOUR', 'DAY_MICROSECOND',
+    'DAY_MINUTE', 'DAY_SECOND', 'DEC', 'DECIMAL', 'DECLARE', 'DEFAULT',
+    'DELAYED', 'DELETE', 'DESC', 'DESCRIBE', 'DETERMINISTIC',
+    'DISTINCT', 'DISTINCTROW', 'DIV', 'DOUBLE', 'DROP', 'DUAL', 'EACH',
+    'ELSE', 'ELSEIF', 'ENCLOSED', 'ESCAPED', 'EXISTS', 'EXIT',
+    'EXPLAIN', 'FALSE', 'FETCH', 'FLOAT', 'FLOAT4', 'FLOAT8', 'FOR',
+    'FORCE', 'FOREIGN', 'FROM', 'FULLTEXT', 'GRANT', 'GROUP', 'HAVING',
+    'HIGH_PRIORITY', 'HOUR_MICROSECOND', 'HOUR_MINUTE', 'HOUR_SECOND',
+    'IF', 'IGNORE', 'IN', 'INDEX', 'INFILE', 'INNER', 'INOUT',
+    'INSENSITIVE', 'INSERT', 'INT', 'INT1', 'INT2', 'INT3', 'INT4',
+    'INT8', 'INTEGER', 'INTERVAL', 'INTO', 'IS', 'ITERATE', 'JOIN',
+    'KEY', 'KEYS', 'KILL', 'LEADING', 'LEAVE', 'LEFT', 'LIKE', 'LIMIT',
+    'LINEAR', 'LINES', 'LOAD', 'LOCALTIME', 'LOCALTIMESTAMP', 'LOCK',
+    'LONG', 'LONGBLOB', 'LONGTEXT', 'LOOP', 'LOW_PRIORITY',
+    'MASTER_SSL_VERIFY_SERVER_CERT', 'MATCH', 'MEDIUMBLOB', 'MEDIUMINT',
+    'MEDIUMTEXT', 'MIDDLEINT', 'MINUTE_MICROSECOND', 'MINUTE_SECOND',
+    'MOD', 'MODIFIES', 'NATURAL', 'NOT', 'NO_WRITE_TO_BINLOG', 'NULL',
+    'NUMERIC', 'ON', 'OPTIMIZE', 'OPTION', 'OPTIONALLY', 'OR', 'ORDER',
+    'OUT', 'OUTER', 'OUTFILE', 'PRECISION', 'PRIMARY', 'PROCEDURE',
+    'PURGE', 'RANGE', 'READ', 'READS', 'READ_WRITE', 'REAL',
+    'REFERENCES', 'REGEXP', 'RELEASE', 'RENAME', 'REPEAT', 'REPLACE',
+    'REQUIRE', 'RESTRICT', 'RETURN', 'REVOKE', 'RIGHT', 'RLIKE',
+    'SCHEMA', 'SCHEMAS', 'SECOND_MICROSECOND', 'SELECT', 'SENSITIVE',
+    'SEPARATOR', 'SET', 'SHOW', 'SMALLINT', 'SPATIAL', 'SPECIFIC',
+    'SQL', 'SQLEXCEPTION', 'SQLSTATE', 'SQLWARNING', 'SQL_BIG_RESULT',
+    'SQL_CALC_FOUND_ROWS', 'SQL_SMALL_RESULT', 'SSL', 'STARTING',
+    'STRAIGHT_JOIN', 'TABLE', 'TERMINATED', 'THEN', 'TINYBLOB',
+    'TINYINT', 'TINYTEXT', 'TO', 'TRAILING', 'TRIGGER', 'TRUE', 'UNDO',
+    'UNION', 'UNIQUE', 'UNLOCK', 'UNSIGNED', 'UPDATE', 'USAGE', 'USE',
+    'USING', 'UTC_DATE', 'UTC_TIME', 'UTC_TIMESTAMP', 'VALUES',
+    'VARBINARY', 'VARCHAR', 'VARCHARACTER', 'VARYING', 'WHEN', 'WHERE',
+    'WHILE', 'WITH', 'WRITE', 'XOR', 'YEAR_MONTH', 'ZEROFILL'];
+var keywords = keywordsMySQL.concat(keywordsMySQL.map(function(keyword) {
+    return keyword;
+}));
+$.terminal.defaults.formatters.push(function(string) {
+    return string.split(/((?:\s|&nbsp;)+)/).map(function(string) {
+        if (keywords.indexOf(string) != -1) {
+            return '[[b;white;]' + string + ']';
+        } else {
+            return string;
+        }
+    }).join('');
 });
 
 term.set_prompt(function(set_prompt) {
     set_prompt('[[;red;]<%= session.username %>@dev.seanmcginty.space >>> ]');
 });
+
+function start() {
+    animation = true;
+    frameIndex = 0;
+    function set() {
+        var text = `${spinner.frames[frameIndex++ % spinner.frames.length]} ${spinnerText} `;
+        term.set_prompt(text);
+    };
+    prompt = term.get_prompt();
+    term.find('.cursor').hide();
+    set();
+    timer = setInterval(set, spinner.interval);
+}
+
+function end() {
+    setTimeout(function() {
+        clearInterval(timer);
+        spinnerText = '';
+        var frame = '';
+        term.set_prompt(prompt).echo(frame);
+        animation = false;
+        term.find('.cursor').show();
+    }, 0);
+}
+
+// Init
+fonts()
+
+// To be complteted
+const commands = [
+    {
+        'name': 'CLEAR',
+        'descriptor': 'Clears the screen.'
+    },{
+        'name': 'COLOR',
+        'descriptor': 'Sets the default console foreground and background colors.',
+        'arguments': [{
+            'attr': 'Specifies color attribute of console output'
+        }],
+        'extra': `Color attributes are specified by TWO hex digits -- the first corresponds to the background; the second the foreground. Each digit can be any of the following values:<br>
+        <br>
+        <table class="terminal-table">
+            <tbody>
+                <tr>
+                    <td>0 = Black</td>
+                    <td>8 = Gray</td>
+                </tr>
+                <tr>
+                    <td>1 = Blue</td>
+                    <td>9 = Light Blue</td>
+                </tr>
+                <tr>
+                    <td>2 = Green</td>
+                    <td>A = Light Green</td>
+                </tr>
+                <tr>
+                    <td>3 = Aqua</td>
+                    <td>B = Light Aqua</td>
+                </tr>
+                <tr>
+                    <td>4 = Red</td>
+                    <td>C = Light Red</td>
+                </tr>
+                <tr>
+                    <td>5 = Purple</td>
+                    <td>D = Light Purple</td>
+                </tr>
+                <tr>
+                    <td>6 = Yellow</td>
+                    <td>E = Light Yellow</td>
+                </tr>
+                <tr>
+                    <td>7 = White</td>
+                    <td>F = Bright White</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        If no argument is given, this command restores the color to what it was<br>
+        when the session started.`,
+        'example': '"COLOR 0a" produces light green on black'
+    },{
+        'name': 'EXIT',
+        'descriptor': 'Exits the current interpreter.',
+        'extra': 'Note that you can also press Ctrl+D to achieve the same result'
+    },{
+        'name': 'FRIENDS',
+        'descriptor': 'Returns friends through the internal API.',
+        'arguments': [{
+            'userid': 'displays all friends of that user'
+        }]
+    },{
+        'name': 'GAMES',
+        'descriptor': 'Returns games through the internal API.',
+        'arguments': [{
+            'gameid': 'displays game information for that game'
+        }]
+    },{
+        'name': 'LIVE',
+        'descriptor': 'Returns live information through the internal API.'
+    },{
+        'name': 'HELP',
+        'descriptor': 'Provides Help information for commands.',
+        'arguments': [{
+            'command': 'displays help information on that command'
+        }]
+    },{
+        'name': 'SUDO',
+        'descriptor': 'Runs a command on the server',
+        'arguments': [{
+            'command': 'returns the result of that command'
+        }]
+    }
+];
+
 </script>
     </body>
 </html>

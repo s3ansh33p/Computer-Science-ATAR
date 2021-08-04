@@ -6589,7 +6589,7 @@
     // :: Terminal Signatures
     // -----------------------------------------------------------------------
     var signatures = [
-        ['jQuery Terminal', '(c) 2011-2021 jcubic'],
+        ['jQuery Terminal', 'Computer Science'],
         [name_ver, copyright.replace(/^Copyright | *<.*>/g, '')],
         [name_ver, copyright.replace(/^Copyright /, '')],
         [

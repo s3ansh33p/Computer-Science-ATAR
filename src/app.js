@@ -6,8 +6,10 @@ const mysql = require('mysql');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const { encrypt } = require('./server/aes');
+const { exec } = require("child_process");
 
 const app = express();
+const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:3000' : 'https://dev.seanmcginty.space';
 const connection = mysql.createConnection({
 	host     : process.env.MYSQL_HOST || 'localhost',
 	user     : process.env.MYSQL_USERNAME || 'root',
@@ -247,14 +249,47 @@ app.get('/shop', (req, res) => {
 })
 
 app.get('/shell', (req, res) => {
-    if (req.session.isAdmin || true) {
+    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
         res.render(path.join(__dirname, '/views/shell'), {
             title: 'Shell',
-            session: req.session
+            session: req.session,
+            type: runtime
         });
     } else {
         res.redirect('/403');
     }
+})
+
+app.post('/shell/sudo', async function(req, res) {
+    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
+
+        function runCommand(command) {
+            return new Promise(function(resolve, reject) {
+                exec(command, (error, stdout, stderr) => {
+                    if (error) {
+                        resolve(JSON.stringify(error));
+                        return;
+                    }
+                    if (stderr) {
+                        resolve(JSON.stringify(stderr));
+                        return;
+                    }
+                    resolve(stdout);
+                    return;
+                });
+            });
+        }
+
+        let command = req.body.command;
+        if (command) {
+            let result = await runCommand(command);
+            console.log(`Shell: ${command} | ${result}`);
+            res.send(result);
+        }
+    } else {
+        res.redirect('/403');
+    }
+
 })
 
 app.get('/api/friends/:id', (req, res) => {
@@ -351,6 +386,7 @@ app.get('/home', function(req, res) {
 	if (req.session.loggedin) {
             res.render(path.join(__dirname, '/views/ui'), {
             title: 'Home',
+            type: runtime,
             ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max'],
             session: req.session
             // friends: [{

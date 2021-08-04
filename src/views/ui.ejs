@@ -211,7 +211,7 @@
             function getFriends() {
                 try {
                     $.ajax({
-                        url: 'http://localhost:3000/api/friends/'+userid,
+                        url: '<%= type %>/api/friends/'+userid,
                         timeout: 1500,
                         error: function () {
                             console.log('Friends API timed out.');
