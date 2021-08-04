@@ -6,6 +6,17 @@
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
         <script src="http://localhost:3000/js/vendor/jquery.terminal.min.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.x.x/css/jquery.terminal.min.css"/>
+        <style>
+            .terminal-table > td {
+                padding: 5px;
+            }
+            #terminal {
+                height: 100%;
+            }
+            :root {
+                --background: black;
+            }
+        </style>
     </head>
     <body>
         <div id="terminal"></div>
@@ -34,29 +45,60 @@ var term = $('#terminal').terminal({
             console.log(err);
         }
     },
+    color: function(arg) {
+        const colors = ['black','red','blue'];
+        if (colors[arg] === undefined) {
+            term.echo(`Invalid argument "${arg}"`);
+        } else {
+            document.documentElement.style.setProperty('--background', colors[arg]);
+        }
+    },
     close: function(arg1, arg2) {
         console.log(arg1);
         console.log(arg2);
     },
     help: function() {
         // To be complteted
-        var div = $(`<span>
-            For more information on a specific command, type help <command-name>
-            <br>ASSOC          Displays or modifies file extension associations.
-            <br>ATTRIB         Displays or changes file attributes.
-            <br>BREAK          Sets or clears extended CTRL+C checking.
-            <br>BCDEDIT        Sets properties in boot database to control boot loading.
-            <br>CACLS          Displays or modifies access control lists (ACLs) of files.
-            <br>CALL           Calls one batch program from another.
-            <br>CD             Displays the name of or changes the current directory.
-            <br>CHCP           Displays or sets the active code page number.
-            <br>CHDIR          Displays the name of or changes the current directory.
-            <br>CHKDSK         Checks a disk and displays a status report.
-            <br>CHKNTFS        Displays or modifies the checking of disk at boot time.
-            <br>CLS            Clears the screen.
-            <br>CMD            Starts a new instance of the Windows command interpreter.
-            <br>COLOR          Sets the default console foreground and background colors.
-        </span>`)
+        const commands = [
+            {
+                'name': 'CALL',
+                'descriptor': 'Calls on batch program from another.'
+            },{
+                'name': 'CD',
+                'descriptor': 'Displays the name of or changes the current directory.'
+            },{
+                'name': 'CLEAR',
+                'descriptor': 'Clears the screen.'
+            },{
+                'name': 'COLOR',
+                'descriptor': 'Sets the default console foreground and background colors.'
+            },{
+                'name': 'EXIT',
+                'descriptor': 'Exits the current interpreter.'
+            },{
+                'name': 'FRIENDS',
+                'descriptor': 'Returns friends through the internal API.'
+            }
+        ];
+        let commandContainer = `<span>
+            For more information on a specific command, type help 'command-name'<br>
+            <table>
+                <tbody>`;
+        for (let i=0; i<commands.length; i++) {
+            commandContainer += `<tr class="terminal-table">
+                        <td>
+                            ${commands[i].name}
+                        </td>
+                        <td>
+                            ${commands[i].descriptor}
+                        </td>
+                    </tr>`;
+        }
+
+        commandContainer += `</tbody>
+            </table>
+        </span>`;
+        const div = $(commandContainer);
         this.echo(div);
     }
 });
