@@ -300,6 +300,33 @@ app.get('/api/friends/:id', (req, res) => {
     });
 })
 
+app.get('/api/games/:id', (req, res) => {
+    connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE r.gameid = ?', [req.params.id], function(error, results, fields) {
+        if (error) throw error;
+        let json = {
+            'map': results[0].map,
+            'mode': results[0].mode,
+            'startTime': results[0].startTime,
+            'duration': results[0].duration,
+            'winner': results[0].winner,
+            'players': []
+        };
+        for (let i=0;i<results.length; i++) {
+            json.players.push({
+                'id': results[i].id,
+                'username': results[i].username,
+                'curRank': results[i].curRank,
+                'kills': results[i].kills,
+                'assists': results[i].assists,
+                'deaths': results[i].deaths
+            });
+        }
+
+        res.json(json);
+        res.end();
+    });
+})
+
 app.get('/api/updates/:page', (req, res) => {
     // Get the most recent updates
     // page defaults to 0 then 1 to get updates 6-10 etc.

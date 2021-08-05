@@ -53,7 +53,7 @@ var term = $('#terminal').terminal({
                 url: '<%= type; %>/api/friends/'+userid,
                 timeout: 1500,
                 error: function () {
-                    console.log('Friends API timed out.');
+                    term.echo('Friends API timed out.');
                 },
                 success: function (payload) {
                     if (payload.players.length === 0) {
@@ -70,23 +70,71 @@ var term = $('#terminal').terminal({
             console.log(err);
         }
     },
-    color: function(arg) {
-        if (arg === undefined) {
+    color: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
             document.documentElement.style.setProperty('--background', '#000');            
             document.documentElement.style.setProperty('--color', '#aaa');            
         } else {
-            if (arg.length !== 2 || !isHex(arg[0]) || !isHex(arg[1])) {
+            if (options[0].toString().length === 1) {
+                options[0] = "0"+options[0];
+            }
+            if (options[0].toString().length !== 2 || !isHex(options[0].toString()[0]) || !isHex(options[0].toString()[1])) {
                 term.exec('help color');
             } else {
                 const colors = ['#000','#00f','#080','#0ff','#ff0','#f0f','#ff0','#fff','#aaa','#0cf','#0f0','#eff','#f44','#b7f','#ff8'];
-                document.documentElement.style.setProperty('--background', colors[parseInt(arg[0],16)]);
-                document.documentElement.style.setProperty('--color', colors[parseInt(arg[1],16)]);
+                document.documentElement.style.setProperty('--background', colors[parseInt(options[0].toString()[0],16)]);
+                document.documentElement.style.setProperty('--color', colors[parseInt(options[0].toString()[1],16)]);
             }
         }
     },
-    close: function(arg1, arg2) {
-        console.log(arg1);
-        console.log(arg2);
+    games: function(gameid) {
+        try {
+            $.ajax({
+                url: '<%= type; %>/api/games/'+gameid,
+                timeout: 1500,
+                error: function () {
+                    term.echo('Games API timed out.');
+                },
+                success: function (payload) {
+                    term.echo($(`<span>
+                        Game Information
+                        <br><br>
+                        Map: ${payload.map}<br>
+                        Mode: ${payload.mode}<br>
+                        Start Time: ${payload.startTime}<br>
+                        Duration: ${payload.duration}<br>
+                        Winner: ${payload.winner}<br>
+                        </span>`));
+                    if (payload.players.length === 0) {
+                        term.echo(`No players found for Game #${userid}`);
+                    } else {
+                        let html = `<br><table><tbody><tr>
+                            <td>ID</td>
+                            <td>Username</td>
+                            <td>Rank</td>
+                            <td>Kills</td>
+                            <td>Deaths</td>
+                            <td>Assists</td>
+                            <td>Score</td>
+                            </tr>`;
+                        for (let i=0; i<payload.players.length; i++) {
+                            html += `<tr><td>${payload.players[i].id}</td>
+                                <td>${payload.players[i].username}</td>
+                                <td>${payload.players[i].curRank}</td>
+                                <td>${payload.players[i].kills}</td>
+                                <td>${payload.players[i].deaths}</td>
+                                <td>${payload.players[i].assists}</td>
+                                <td>SCORE</td></tr>`;
+                        }
+                        html += '</tbody></table>';
+                        term.echo($(html));
+                    }
+                }
+            })
+        } catch(err) {
+            console.log(err);
+        }
     },
     help: function(...args) {
         let options = ($.terminal.parse_options(args))["_"];
