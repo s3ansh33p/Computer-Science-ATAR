@@ -11,13 +11,26 @@
         <script src="<%= type; %>/js/vendor/unix_formatting.js"></script>
         <link rel="stylesheet" href="https://unpkg.com/jquery.terminal@2.x.x/css/jquery.terminal.min.css"/> 
         <style>
-            .terminal-table td {
+            table td {
                 padding: 5px;
                 border-color: var(--color);
             }
             #terminal {
                 height: 100%;
             }
+
+            .terminal-table {
+                overflow-x: auto;
+            }
+            
+            .terminal-table::-webkit-scrollbar {
+                background: var(--background,#000);
+                height: 6px;
+                width: 6px;
+            }
+            .terminal-table::-webkit-scrollbar-thumb, .terminal-table::-webkit-scrollbar-thumb:hover {
+                    background: var(--color,#aaa);
+                }
             :root {
                 --background: #000;
                 --color: #aaa;
@@ -48,6 +61,8 @@ let prompt;
 let frameIndex;
 var term = $('#terminal').terminal({
     friends: function(userid) {
+        spinnerText = 'Fetching data';
+        start();
         try {
             $.ajax({
                 url: '<%= type; %>/api/friends/'+userid,
@@ -59,16 +74,26 @@ var term = $('#terminal').terminal({
                     if (payload.players.length === 0) {
                         term.echo(`No friends found for User #${userid}`);
                     } else {
-                        term.echo(`There were ${payload.players.length} records found for User #${userid}`);
+                        term.echo(`There ${(payload.players.length === 1) ? 'is' : 'are'} ${payload.players.length} record${(payload.players.length === 1) ? '' : 's'} found for User #${userid}`);
+                        let html = `<br><table><tbody><tr>
+                                <td>Username</td>
+                                <td>Online</td>
+                                <td>Accepted</td>
+                                </tr>`;
                         for (let i=0; i<payload.players.length; i++) {
-                            term.echo(`Username: ${payload.players[i].username} | Online: ${payload.players[i].isOnline} | Accepted: ${payload.players[i].accepted}`);
+                            html += `<tr><td>${payload.players[i].username}</td>
+                                    <td>${payload.players[i].isOnline}</td>
+                                    <td>${payload.players[i].accepted}</td>`;
                         }
+                        html += "</tbody></table>";
+                        term.echo($(html));
                     }
                 }
             })
         } catch(err) {
             console.log(err);
         }
+        end();
     },
     color: function(...args) {
         let options = ($.terminal.parse_options(args))["_"];
@@ -88,7 +113,43 @@ var term = $('#terminal').terminal({
             }
         }
     },
+    mysql: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            this.exec('help mysql');
+        } else {
+            spinnerText = 'Running query';
+            start();
+            $.post('<%= type; %>/shell/mysql', {command: options.join(' ')}).then(function(response) {
+                if (response.errno) {
+                    term.echo(JSON.stringify(response))
+                } else {
+                    if (response.length === 0) {
+                        term.echo('No records returned');
+                    } else {
+                        let html = '<br><div class="terminal-table"><table><tbody><tr>';
+                        for (let i=0;i<Object.getOwnPropertyNames(response[0]).length; i++) {
+                            html += `<td>${Object.getOwnPropertyNames(response[0])[i]}</td>`;
+                        }
+                        html += '</tr>';
+                        for (let i=0;i<response.length; i++) {
+                            html += '<tr>';
+                            for (let j=0;j<Object.getOwnPropertyNames(response[0]).length; j++) {
+                                html += `<td>${response[i][Object.getOwnPropertyNames(response[0])[j]]}</td>`;
+                            }
+                            html += '</tr>';
+                        }
+                        html += '</tbody></table></div><br>';
+                        term.echo($(html));
+                    }
+                }
+            });
+            end();
+        }  
+    },
     games: function(gameid) {
+        spinnerText = 'Fetching data';
+        start();
         try {
             $.ajax({
                 url: '<%= type; %>/api/games/'+gameid,
@@ -97,51 +158,58 @@ var term = $('#terminal').terminal({
                     term.echo('Games API timed out.');
                 },
                 success: function (payload) {
-                    term.echo($(`<span>
-                        Game Information
-                        <br><br>
-                        Map: ${payload.map}<br>
-                        Mode: ${payload.mode}<br>
-                        Start Time: ${payload.startTime}<br>
-                        Duration: ${payload.duration}<br>
-                        Winner: ${payload.winner}<br>
-                        </span>`));
-                    if (payload.players.length === 0) {
-                        term.echo(`No players found for Game #${userid}`);
+                    if (payload.error) {
+                        term.echo(payload.error+'<br>');
                     } else {
-                        let html = `<br><table><tbody><tr>
-                            <td>ID</td>
-                            <td>Username</td>
-                            <td>Rank</td>
-                            <td>Kills</td>
-                            <td>Deaths</td>
-                            <td>Assists</td>
-                            <td>Score</td>
-                            </tr>`;
-                        for (let i=0; i<payload.players.length; i++) {
-                            html += `<tr><td>${payload.players[i].id}</td>
-                                <td>${payload.players[i].username}</td>
-                                <td>${payload.players[i].curRank}</td>
-                                <td>${payload.players[i].kills}</td>
-                                <td>${payload.players[i].deaths}</td>
-                                <td>${payload.players[i].assists}</td>
-                                <td>SCORE</td></tr>`;
+                        term.echo($(`<span>
+                            Game Information for Game #${gameid}
+                            <br><br>
+                            Map: ${gameInfo.maps[payload.map].name} (${payload.map})<br>
+                            ${gameInfo.maps[payload.map].description}<br><br>
+                            Mode: ${gameInfo.modes[payload.mode].name} (${payload.map})<br>
+                            ${gameInfo.modes[payload.mode].description}<br><br>
+                            Start Time: ${payload.startTime}<br>
+                            Duration: ${payload.duration}<br>
+                            Winner: ${payload.winner}<br>
+                            </span>`));
+                        if (payload.players.length === 0) {
+                            term.echo(`No players found for Game #${userid}`);
+                        } else {
+                            let html = `<br><table><tbody><tr>
+                                <td>ID</td>
+                                <td>Username</td>
+                                <td>Rank</td>
+                                <td>Kills</td>
+                                <td>Deaths</td>
+                                <td>Assists</td>
+                                <td>Score</td>
+                                </tr>`;
+                            for (let i=0; i<payload.players.length; i++) {
+                                html += `<tr><td>${payload.players[i].id}</td>
+                                    <td>${payload.players[i].username}</td>
+                                    <td>${gameInfo.ranks[payload.players[i].curRank]}</td>
+                                    <td>${payload.players[i].kills}</td>
+                                    <td>${payload.players[i].deaths}</td>
+                                    <td>${payload.players[i].assists}</td>
+                                    <td>${payload.players[i].kills*2+payload.players[i].assists}</td></tr>`;
+                            }
+                            html += '</tbody></table><br>';
+                            term.echo($(html));
                         }
-                        html += '</tbody></table>';
-                        term.echo($(html));
                     }
                 }
             })
         } catch(err) {
             console.log(err);
         }
+        end();
     },
     help: function(...args) {
         let options = ($.terminal.parse_options(args))["_"];
         if (options[0] === undefined) {
             let commandContainer = `<span>
                 For more information on a specific command, type help 'command-name'<br><br>
-                <table class="terminal-table">
+                <table>
                     <tbody>`;
             for (let i=0; i<commands.length; i++) {
                 commandContainer += `<tr>
@@ -233,6 +301,12 @@ var term = $('#terminal').terminal({
         if (animation) {
             return false;
         }
+    },
+    // Auto start with custom color profile
+    onInit: () => {
+        setTimeout(() => {
+            term.exec('color 0a');
+        }, 100);
     }
 });
 
@@ -319,6 +393,31 @@ function end() {
 // Init
 fonts()
 
+// As documented in https://docs.google.com/document/d/1TK5HlipziA2nSvrkaUz8Xi36uU8StKVAvU3BXdNLBgE/edit
+const gameInfo = {
+    'modes': [{
+        'name': 'Capture the flag',
+        'description': 'In two teams of up to five players, each team has a flag in a dedicated area, with the goal being to capture the opponents flag and bring it to their own dedicated area for a flag.'
+    },{
+        'name': 'Deathmatch',
+        'description': 'FFA (free for all) style. This mode is for people who want to practise aim or get used to the game.'
+    },{
+        'name': 'Capture the flag (with FF)',
+        'description': 'Same as Capture the Flag, though Friendly Fire is enabled such that a teammate can attack another teammate.'
+    }],
+    'maps': [{
+        'name': 'Developer',
+        'description': 'This is the developer map which is used for debugging.'
+    },{
+        'name': 'City',
+        'description': 'This is a city themed map set in the middle of the day.'
+    },{
+        'name': 'City (Night)',
+        'description': 'This is the same map as City though the lighting is set in the middle of the night.'
+    }],
+    'ranks': ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max']
+}
+
 // To be complteted
 const commands = [
     {
@@ -332,7 +431,7 @@ const commands = [
         }],
         'extra': `Color attributes are specified by TWO hex digits -- the first corresponds to the background; the second the foreground. Each digit can be any of the following values:<br>
         <br>
-        <table class="terminal-table">
+        <table>
             <tbody>
                 <tr>
                     <td>0 = Black</td>
@@ -396,6 +495,12 @@ const commands = [
         'descriptor': 'Provides Help information for commands.',
         'arguments': [{
             'command': 'displays help information on that command'
+        }]
+    },{
+        'name': 'MYSQL',
+        'descriptor': 'Runs a mysql query on the server',
+        'arguments': [{
+            'command': 'returns the result of that query'
         }]
     },{
         'name': 'SUDO',

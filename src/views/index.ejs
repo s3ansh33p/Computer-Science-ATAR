@@ -1,29 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="landing">
 
     <%- include('./components/header.ejs'); %>
     
     <body>
-        <div class="d-flex" id="wrapper">
-            
-            <%- include('./components/sidebar.ejs'); %>
-            
-            <div id="page-content-wrapper">
-                
-                <%- include('./components/topnav.ejs'); %>
+        <%- include('./components/topnav.ejs'); %>
 
-                <div class="container-fluid">
-                    <h1 class="mt-4">Simple Sidebar</h1>
-                    <p>The starting state of the menu will appear collapsed on smaller screens, and will appear non-collapsed on larger screens. When toggled using the button below, the menu will change.</p>
-                    <p>
-                        Make sure to keep all page content within the
-                        <code>#page-content-wrapper</code>
-                        . The top navbar is optional, and just for demonstration. Just create an element with the
-                        <code>#sidebarToggle</code>
-                        ID which will toggle the menu when clicked.
-                    </p>
+        <div class="fullscreen-bg d-flex align-items-center flex-column" style="margin-top: 50px;">
+            <img src="./assets/csgo.jpg" class="w-100">
+        </div>
+        <div class="container">
+            <div class="d-flex flex-column justify-content-center align-items-center" style="height: 100vh">
+                <h1 class="text-white">Counter-Strike: Computer Science</h1>
+                <h4 class="py-3 mb-3 text-warning">A New Counter-Strike Experience Developed By <a class="text-white" href="https://github.com/s3ansh33p/">Sean McGinty</a></h4>
+                <a href="./register"><button class="btn btn-dark">JOIN NOW</button></a>
+            </div>
+
+            <div class="row text-white mb-4 pb-4">
+                <div class="col-sm-12 col-md-6 mb-2">
+                    <h2>Easy access</h2>
+                    <h4 class="text-warning">You only need a web browser</h4>
+                    <p>Join a game any time over the web. The entire game is loaded and ran in your browser.</p>
+                </div>
+                <div class="col-sm-12 col-md-6 mb-2">
+                    <h2>Free to play</h2>
+                    <h4 class="text-warning">Free now and always</h4>
+                    <p>You will never have to pay any money to play this game. (This is an assessment piece and using CS:GO material so this is a given)</p>
+                </div>
+                <div class="col-sm-12 col-md-6 mb-2">
+                    <h2>Low hardware requirements</h2>
+                    <h4 class="text-warning">Your toaster could run this</h4>
+                    <p>Most computers should be able to run the game at 30 FPS at a minimum, though you should expect to be reaching the maximum FPS.</p>
+                </div>
+                <div class="col-sm-12 col-md-6 mb-2">
+                    <h2>Feature rich</h2>
+                    <h4 class="text-warning">Offering a range features</h4>
+                    <p>Includes comprehensive analytics from every game, friend systems, advanced settings, admin tools and more.</p>
                 </div>
             </div>
+        
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
         <script src="js/ui.js"></script>

@@ -196,7 +196,8 @@ server.listen(wsport, () => {
 // Setup routes
 app.get('/', (req, res) => {
     res.render(path.join(__dirname, '/views/index'), {
-        title: 'Home'
+        title: 'Home',
+        session: req.session
     });
 })
 
@@ -289,7 +290,23 @@ app.post('/shell/sudo', async function(req, res) {
     } else {
         res.redirect('/403');
     }
+})
 
+app.post('/shell/mysql', async function(req, res) {
+    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
+        if (req.body.command) {
+            connection.query(req.body.command, function(error, results, fields) {
+                if (error) res.json(error);
+                res.json(results);
+            });
+        } else {
+            res.json({
+                'error': 'No query in request'
+            });
+        }
+    } else {
+        res.redirect('/403');
+    }
 })
 
 app.get('/api/friends/:id', (req, res) => {
@@ -302,6 +319,39 @@ app.get('/api/friends/:id', (req, res) => {
 
 app.get('/api/games/:id', (req, res) => {
     connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE r.gameid = ?', [req.params.id], function(error, results, fields) {
+        if (error) throw error;
+            if (results.length > 0) {
+            let json = {
+                'map': results[0].map,
+                'mode': results[0].mode,
+                'startTime': results[0].startTime,
+                'duration': results[0].duration,
+                'winner': results[0].winner,
+                'players': []
+            };
+            for (let i=0;i<results.length; i++) {
+                json.players.push({
+                    'id': results[i].id,
+                    'username': results[i].username,
+                    'curRank': results[i].curRank,
+                    'kills': results[i].kills,
+                    'assists': results[i].assists,
+                    'deaths': results[i].deaths
+                });
+            }
+            res.json(json);
+        } else {
+            res.json({
+                'error': 'No records found'
+            });
+        }
+
+        res.end();
+    });
+})
+
+app.get('/api/live', (req, res) => {
+    connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE (UNIX_TIMESTAMP(g.startTime)+duration) > ? AND UNIX_TIMESTAMP(g.startTime) < ?', [req.params.id], function(error, results, fields) {
         if (error) throw error;
         let json = {
             'map': results[0].map,
@@ -416,15 +466,6 @@ app.get('/home', function(req, res) {
             type: runtime,
             ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max'],
             session: req.session
-            // friends: [{
-            //     'username': 'Decay',
-            //     'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
-            //     'online': true
-            // },{
-            //     'username': 'dinrah',
-            //     'avatar': 'https://i.guim.co.uk/img/media/1b484f728a7be02fd5684ffdd110b63b1875c898/0_137_2603_1562/master/2603.jpg?width=1200&height=1200&quality=85&auto=format&fit=crop&s=394e2a7cbf2a64189f2e4463b5a73050',
-            //     'online': false
-            // }]
         });
         res.end();
 	} else {
