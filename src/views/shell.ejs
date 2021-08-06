@@ -352,7 +352,7 @@ var term = $('#terminal').terminal({
                     }
                     html += '</tbody></table><br>';
                     if (dataflow) {
-                        $('#terminal').children()[0].children[1].children[term.last_index()].children[0].innerHTML = `<span style="color:red;--color:red;--original-color:red;" data-text="@dev.seanmcginty.space >>> "><span>@dev.seanmcginty.space&nbsp;&gt;&gt;&gt;&nbsp;</span></span><span data-text="data ${options.join(' ')}">data ${options.join(' ')}</span>` + html;
+                        $('#terminal').children()[0].children[1].children[term.last_index()].children[0].innerHTML = `<span style="color:red;--color:red;--original-color:red;" data-text="<%= session.username %>@dev.seanmcginty.space >>> "><span><%= session.username %>@dev.seanmcginty.space&nbsp;&gt;&gt;&gt;&nbsp;</span></span><span data-text="data ${options.join(' ')}">data ${options.join(' ')}</span>` + html;
                         setTimeout(() => {
                             getData();
                         }, 100);

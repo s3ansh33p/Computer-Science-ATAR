@@ -100,7 +100,22 @@ wss.on('connection', (ws) => {
             ws.playerData = message.slice(1);
             wss.broadcast({'message':ws.playerData,'client':ws.id}, 4)
 
-        } 
+        } else if (message[0] === 3) {
+
+            let authcode = decodeClient(message.slice(1,5));
+            if (authcode === '12345678') {
+                ws.userID = parseInt(decodeClient(message.slice(5)));
+                
+                connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
+                    if (error) throw error;
+                    if (results.length > 0) {
+                        ws.userData.username = results[0].username;
+                    }
+                });
+
+            }
+
+        }
 
     });
 
@@ -127,6 +142,15 @@ wss.on('connection', (ws) => {
  * @version 1.0
  */
 const encodeClient = (id) => {return id.match(/.{1,2}/g).map(byte => parseInt(byte, 16))}
+
+/**
+ * Decodes a client's id from a byte array to hex
+ * @author  https://stackoverflow.com/users/1326803/jason-dreyzehner
+ * @param   {number[]} id The client id in array byte form
+ * @returns {string}
+ * @version 1.0
+ */
+ const decodeClient = (id) => {return id.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '')}
 
 /**
  * Sends a message to all websocket connections
@@ -236,7 +260,8 @@ app.get('/logout', (req, res) => {
 app.get('/game', (req, res) => {
     if (req.session.loggedin || process.env.NODE_ENV === 'development') { // Skip auth if in development mode
         res.render(path.join(__dirname, '/views/game'), {
-            title: 'Game'
+            title: 'Game',
+            session: req.session
         });
     } else {
 		res.redirect('/login');

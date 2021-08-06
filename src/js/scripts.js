@@ -39,7 +39,7 @@ function sendData(data) {
      * @constant
      * @type {string[]}
      */
-    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" ];
+    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH" ];
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
@@ -70,12 +70,24 @@ function sendData(data) {
             (Math.abs(data.data.rotation))
         ]);
 
+    } else if (byteData[0] === 3) {
+        byteData.push(encodeHex(data.data.code.toString()));
+        byteData.push(data.data.userid);
     }
 
     // Finally, send the data to the server
     server.send(new Uint8Array(byteData.flat()).buffer);
 
 }
+
+/**
+ * Encodes hex to a byte array
+ * @author  https://stackoverflow.com/users/1326803/jason-dreyzehner
+ * @param   {string} hex The hex value
+ * @returns {number[]}
+ * @version 1.0
+ */
+ const encodeHex = (hex) => {return hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))}
 
 /**
  * The players client id used or networking
@@ -181,6 +193,14 @@ server.onmessage = function (event) {
 
             const conMS = Math.round(timerEnd('connectionMS'));
             document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
+
+            sendData({
+                'data': {
+                         'code': 12345678, // Todo: add auth generation and server side validation
+                         'userid': userid // Defined in game.ejs from session
+                },
+                'type': 'auth'
+               })
             break;
 
         case 2:
