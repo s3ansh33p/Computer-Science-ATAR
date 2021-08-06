@@ -59,6 +59,7 @@ let animation = false;
 let timer;
 let prompt;
 let frameIndex;
+let dataflow = false;
 var term = $('#terminal').terminal({
     friends: function(userid) {
         spinnerText = 'Fetching data';
@@ -294,11 +295,84 @@ var term = $('#terminal').terminal({
                 term.echo(response).resume();
             });
         }       
+    },
+    chat: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            this.exec('help chat');
+        } else {
+            term.pause();
+            $.post('<%= type; %>/shell/chat', {message: options.join(' ')}).then(function(response) {
+                term.echo(response).resume();
+            });
+        }       
+    },
+    data: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            this.exec('help data');
+        } else {
+            function getData() {
+                $.post('<%= type; %>/shell/data', {message: options.join(' ')}).then(function(response) {
+                    response = JSON.parse(response);
+                    let html = `<br><br><table style="background-color: var(--background,#000); color: var(--color,#aaa);"><tbody><tr>
+                            <td>Client</td>
+                            <td>Username</td>
+                            <td>Team</td>
+                            <td>X Coord</td>
+                            <td>Y Coord</td>
+                            <td>Z Coord</td>
+                            <td>Rotation</td>
+                        </tr>`;
+                    for (let i=0; i<response.length; i++) {
+                        html += `<tr>
+                                <td>${response[i].client}</td>
+                                <td>${response[i].userData.username}</td>
+                                <td>${(response[i].userData.team) ? 'CT' : 'T'}</td>`;
+                        if (response[i].playerData[0] === undefined) {
+                            html += `               
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>`;
+                        } else {
+                            let x = parseFloat( ((response[i].playerData[0].toString().slice(0,1) === "2") ? "-" : "" ) + response[i].playerData[0].toString().slice(1) + "." + response[i].playerData[1].toString().slice(1) );
+                            let y = parseFloat( ((response[i].playerData[2].toString().slice(0,1) === "2") ? "-" : "" ) + response[i].playerData[2].toString().slice(1) + "." + response[i].playerData[3].toString().slice(1) );
+                            let z = parseFloat( ((response[i].playerData[4].toString().slice(0,1) === "2") ? "-" : "" ) + response[i].playerData[4].toString().slice(1) + "." + response[i].playerData[5].toString().slice(1) );
+                            let r = parseFloat( ((response[i].playerData[6] === 1) ? -1 : 1) * response[i].playerData[7] );
+
+                            html += `               
+                                <td>${x}</td>
+                                <td>${y}</td>
+                                <td>${z}</td>
+                                <td>${r}</td>
+                            </tr>`;
+                        }
+                    }
+                    html += '</tbody></table><br>';
+                    if (dataflow) {
+                        $('#terminal').children()[0].children[1].children[term.last_index()].children[0].innerHTML = `<span style="color:red;--color:red;--original-color:red;" data-text="@dev.seanmcginty.space >>> "><span>@dev.seanmcginty.space&nbsp;&gt;&gt;&gt;&nbsp;</span></span><span data-text="data ${options.join(' ')}">data ${options.join(' ')}</span>` + html;
+                        setTimeout(() => {
+                            getData();
+                        }, 100);
+                    }
+                });
+            };
+            dataflow = true;
+            getData();
+
+        }       
     }
 }, {
     checkArity: false,
     keydown: function(e) {
         if (animation) {
+            return false;
+        }
+        if (dataflow) {
+            dataflow = false;
+            this.echo('Data view updates stopped.');
             return false;
         }
     },
@@ -421,6 +495,12 @@ const gameInfo = {
 // To be complteted
 const commands = [
     {
+        'name': 'CHAT',
+        'descriptor': 'Sends a message to each player',
+        'arguments': [{
+            'message': 'contents to display to each player'
+        }]
+    },{
         'name': 'CLEAR',
         'descriptor': 'Clears the screen.'
     },{
@@ -471,6 +551,9 @@ const commands = [
         If no argument is given, this command restores the color to what it was<br>
         when the session started.`,
         'example': '"COLOR 0a" produces light green on black'
+    },{
+        'name': 'DATA',
+        'descriptor': 'Displays the raw game data'
     },{
         'name': 'EXIT',
         'descriptor': 'Exits the current interpreter.',

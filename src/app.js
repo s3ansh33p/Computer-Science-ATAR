@@ -137,7 +137,7 @@ const encodeClient = (id) => {return id.match(/.{1,2}/g).map(byte => parseInt(by
  * @version 1.0
  * @example
  * broadcast({
- *  'message': "Hello World",
+ *  'message': Array.from(new TextEncoder().encode("Hello World")),
  *  'client':  "f5364d9da966c069"
  *  },
  *  3
@@ -256,6 +256,40 @@ app.get('/shell', (req, res) => {
             session: req.session,
             type: runtime
         });
+    } else {
+        res.redirect('/403');
+    }
+})
+
+app.post('/shell/chat', async function(req, res) {
+    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
+        let message = req.body.message;
+        if (message) {
+            wss.broadcast({
+                'message': Array.from(new TextEncoder().encode(message)),
+                'client':  "1000000000000000"
+            },3)
+            res.send('Sent message');
+        } else {
+            res.send('No message contents');
+        }
+    } else {
+        res.redirect('/403');
+    }
+})
+
+app.post('/shell/data', async function(req, res) {
+    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
+        let message = req.body.message;
+        if (message) {
+            let result = [];
+            wss.clients.forEach(function each(client) {
+                result.push({'client':client.id, 'playerData':client.playerData, 'userData':client.userData});
+             });
+            res.send(JSON.stringify(result));
+        } else {
+            res.send('No message contents');
+        }
     } else {
         res.redirect('/403');
     }

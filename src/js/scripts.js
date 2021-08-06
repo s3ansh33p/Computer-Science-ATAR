@@ -209,8 +209,8 @@ server.onmessage = function (event) {
         case 3:
 
             const chatContainer = document.getElementById('chat-msg-container');
-
-            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
+            
+            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${(decodeClient(Uint8Array.from(Uint8View.slice(1,8))) === '10000000000000') ? '[SERVER]' : decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
             
             if (chatContainer.children.length > 20) {
 
