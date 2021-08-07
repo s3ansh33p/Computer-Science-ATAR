@@ -327,9 +327,19 @@ var term = $('#terminal').terminal({
             this.exec('help server');
         } else {
             term.pause();
-            $.post('<%= type; %>/shell/server', {command: options.join(' ')}).then(function(response) {
-                term.echo(response).resume();
-            });
+
+            if (options[0].toUpperCase() === "UPDATE") {
+                // term.exec('sudo cd .. && git pull');
+                term.exec('sudo cd .. && npm run build');
+                term.exec('sudo cd .. && npm run build:prod');
+                term.exec('sudo pm2 restart app.js')
+            } else if (options[0].toUpperCase() === "RESTART") {
+                term.exec('sudo pm2 restart app.js');
+            } else {
+                term.echo('Invalid argument');
+            }
+            term.resume();
+            
         }       
     },
     data: function(...args) {

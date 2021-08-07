@@ -368,48 +368,6 @@ app.post('/shell/mysql', async function(req, res) {
     }
 })
 
-app.post('/shell/server', async function(req, res) {
-    if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
-
-        function runCommand(command) {
-            return new Promise(function(resolve, reject) {
-                exec(command, (error, stdout, stderr) => {
-                    if (error) {
-                        resolve(JSON.stringify(error));
-                        return;
-                    }
-                    if (stderr) {
-                        resolve(JSON.stringify(stderr));
-                        return;
-                    }
-                    resolve(stdout);
-                    return;
-                });
-            });
-        }
-
-        if (req.body.command) {
-            let command;
-            if (req.body.command.toUpperCase() === "UPDATE") {
-                command = 'cd .. && git pull && npm run build && npm run build:prod && cd dist && pm2 restart app.js';
-            } else if (req.body.command.toUpperCase() === "RESTART") {
-                command = 'pm2 restart app.js';
-            } else {
-                res.send('Invalid argument/s');
-                res.end();
-            }
-
-            let result = await runCommand(command);
-            res.send(result);
-        } else {
-            res.send('Invalid argument/s');
-        }
-
-    } else {
-        res.redirect('/403');
-    }
-})
-
 app.get('/api/friends/:id', (req, res) => {
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ?', [req.params.id], function(error, results, fields) {
         if (error) throw error;
