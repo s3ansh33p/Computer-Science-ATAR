@@ -329,7 +329,7 @@ var term = $('#terminal').terminal({
             term.pause();
 
             if (options[0].toUpperCase() === "UPDATE") {
-                // term.exec('sudo cd .. && git pull');
+                term.exec('sudo cd .. && git pull');
                 term.exec('sudo cd .. && npm run build');
                 term.exec('sudo cd .. && npm run build:prod');
                 term.exec('sudo pm2 restart app.js')
