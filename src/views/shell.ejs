@@ -415,6 +415,7 @@ var term = $('#terminal').terminal({
     onInit: () => {
         setTimeout(() => {
             term.exec('color 0a');
+            $('#terminal').parent().children()[0].innerHTML += `<div class="terminal-scroll-phone"><div style="height: 120px;"></div></div>`;
         }, 100);
     }
 });
