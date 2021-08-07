@@ -15,6 +15,19 @@
                 padding: 5px;
                 border-color: var(--color);
             }
+
+            @media screen and (max-width: 450px) {
+                #phone-spacer {
+                    display: block!important;
+                }
+            }
+
+            #phone-spacer {
+                display: none;
+                height: 50vh;
+                background: var(--background,#000);
+            }
+
             #terminal {
                 height: 100%;
             }
@@ -39,6 +52,7 @@
     </head>
     <body>
         <div id="terminal"></div>
+        <div id="phone-spacer"></div>
 <script>
 const spinner = {"interval": 80,
     "frames": [
@@ -307,6 +321,17 @@ var term = $('#terminal').terminal({
             });
         }       
     },
+    server: function(...args) {
+        let options = ($.terminal.parse_options(args))["_"];
+        if (options[0] === undefined) {
+            this.exec('help server');
+        } else {
+            term.pause();
+            $.post('<%= type; %>/shell/server', {command: options.join(' ')}).then(function(response) {
+                term.echo(response).resume();
+            });
+        }       
+    },
     data: function(...args) {
         let options = ($.terminal.parse_options(args))["_"];
         if (options[0] === undefined) {
@@ -355,7 +380,7 @@ var term = $('#terminal').terminal({
                         $('#terminal').children()[0].children[1].children[term.last_index()].children[0].innerHTML = `<span style="color:red;--color:red;--original-color:red;" data-text="<%= session.username %>@dev.seanmcginty.space >>> "><span><%= session.username %>@dev.seanmcginty.space&nbsp;&gt;&gt;&gt;&nbsp;</span></span><span data-text="data ${options.join(' ')}">data ${options.join(' ')}</span>` + html;
                         setTimeout(() => {
                             getData();
-                        }, 100);
+                        }, 1000);
                     }
                 });
             };
@@ -584,6 +609,29 @@ const commands = [
         'descriptor': 'Runs a mysql query on the server',
         'arguments': [{
             'command': 'returns the result of that query'
+        }]
+    },{
+        'name': 'SERVER',
+        'descriptor': 'Runs a set of commands on the server',
+        'extra': `<br>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Value</td>
+                    <td>Description</td>
+                </tr>
+                <tr>
+                    <td>Restart</td>
+                    <td>Runs a full restart of the server</td>
+                </tr>
+                <tr>
+                    <td>Update</td>
+                    <td>Fetches the latest files github and builds the project with production settings</td>
+                </tr>
+            </tbody>
+        </table>`,
+        'arguments': [{
+            'command': 'the set of commands to run'
         }]
     },{
         'name': 'SUDO',
