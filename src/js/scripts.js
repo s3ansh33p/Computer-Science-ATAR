@@ -1,3 +1,5 @@
+window.globalHandler = window.globalHandler || {};
+
 /**
  * A websocket connection to the server for networking
  * @constant
@@ -229,8 +231,9 @@ server.onmessage = function (event) {
         case 3:
 
             const chatContainer = document.getElementById('chat-msg-container');
-            
-            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span>${(decodeClient(Uint8Array.from(Uint8View.slice(1,8))) === '10000000000000') ? '[SERVER]' : decodeClient(Uint8Array.from(Uint8View.slice(1,8)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
+
+            let serverMsg = (decodeClient(Uint8Array.from(Uint8View.slice(1,9))) === '1000000000000000');
+            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span${serverMsg ? ' style="color: #f00"' : ''}>${serverMsg ? '[SERVER]' : decodeClient(Uint8Array.from(Uint8View.slice(1,9)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
             
             if (chatContainer.children.length > 20) {
 
@@ -317,70 +320,6 @@ server.onopen = function () {
     setInterval(ping, 30000);
 }
 
-/**
- * Check if the key released is configured for interacting with a UI element
- * @author  Sean McGinty <newfolderlocation@gmail.com>
- * @param   {KeyboardEvent} e The keyboard event from the event listener
- * @returns {void}
- * @version 1.1
- * @todo Change KeyY to be configurable in a menu / settings
- */
-document.addEventListener('keyup',function (e) {
-
-    if (e.code === "KeyY" && !typing) {
-
-        document.getElementById('chat-input').value = "";
-        typing = true
-        document.getElementById('chat-input').focus();
-
-    } else if (e.code === "Enter" && typing) {
-
-        document.getElementById('chat-input').blur();
-        typing = false;
-
-        if (document.getElementById('chat-input').value != "") {
-
-            sendData({
-                'data': document.getElementById('chat-input').value,
-                'type': 'chatMessage'
-            })
-
-            document.getElementById('chat-input').value = "";
-
-        }
-    } else if (e.code === "Tab") {
-
-        e.preventDefault();
-        document.getElementsByClassName('tab-container')[0].style.display = 'none';
-
-    }
-
-})
-
-/**
- * Check if the key pressed is configured for interacting with a UI element
- * @author  Sean McGinty <newfolderlocation@gmail.com>
- * @param   {KeyboardEvent} e The keyboard event from the event listener
- * @returns {void}
- * @version 1.0
- * @todo Change Tab to be configurable in a menu / settings
- */
-document.addEventListener('keydown',function (e) {
-
-    if (e.code === "Tab") {
-
-        e.preventDefault();
-        document.getElementsByClassName('tab-container')[0].style.display = 'flex';
-
-    } else if (e.code === "Escape") {
-
-        e.preventDefault();
-        globalHandler.log(`Display Settings Menu`,`Debug`)
-
-    }
-
-})
-
 let gameTime = 600;
 let gameTimers;
 
@@ -451,6 +390,23 @@ function updateGameTimers() {
 }
 
 /**
+ * Handler for the side / escape menu in the game UI
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number} index The index of the element pressed within the menu
+ * @returns {void}
+ * @version 1.0
+ * @todo Attach functions to menu
+ */
+function gameMenu(index) {
+    if (index === 4) {
+        globalHandler.log('Leaving game', 'Debug');
+        window.location.href = window.location.href.slice(0, window.location.href.lastIndexOf('/'))+'/home';
+    } else {
+        globalHandler.log(`Clicked on menu index ${index}`, 'Debug');
+    }
+};
+
+/**
  * Update game information in the tab ui
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {number} identifier The element index within the tab-mode div to change.
@@ -476,4 +432,245 @@ function sendGameAlert(content) {
 </div>`
 }
 
-window.globalHandler = window.globalHandler || {};
+/**
+ * Display the scores menu
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function showScoresMenu() {
+    document.getElementsByClassName('tab-container')[0].style.display = 'flex';
+}
+
+/**
+ * Hide the scores menu
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function hideScoresMenu() {
+    document.getElementsByClassName('tab-container')[0].style.display = 'none';
+}
+
+/**
+ * Saves user settings in local storage
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {Object} settings The settings encoded in JSON
+ * @returns {void}
+ * @version 1.0
+ */
+function saveSettings(settings) {
+    if (localStorage && typeof settings == 'object') localStorage.setItem('userSettings', JSON.stringify(settings));
+}
+
+/**
+ * Changes the user settings to the defualt value in local storage
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function resetSettings() {
+    if (localStorage) {
+        localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
+    }
+}
+
+/**
+ * Retrieves user settings from the local storage
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {Object} settings The settings encoded in JSON
+ * @version 1.0
+ */
+
+function getSettings() {
+    if (localStorage) {
+        var savedSettings = localStorage.getItem('userSettings');
+        if (!savedSettings) resetSettings();
+        return JSON.parse(localStorage.getItem('userSettings'));
+    }
+    return defaultSettings;
+}
+
+/**
+ * Create a new keybind
+ * @author Drew Snow <https://github.com/SnowLord7>
+ * @param {Function} func - Function to run on keydown
+ * @param {*} code - Identifier to select or remove keybind
+ * @param {Number} key - Key to call function
+ * @param {Boolean} [false] bool - Does the keybind start as on or off
+ */
+function addKeyBind(func, code = -1, key = '', bool = false) {
+    keybinds.push({
+        'key': key,
+        'on': bool,
+        'func': func,
+        'code': code
+    });
+    if (bool) func();
+}
+
+/**
+ * Remove keybind(s) with given identifier
+ * @author Drew Snow <https://github.com/SnowLord7>
+ * @param {*} code - Identifier to find and remove keybind
+ * @returns {Boolean} Keybind found or not
+ */
+function removeKeyBind(code) {
+    for (let i = 0; i < keybinds.length; i++) {
+        let binds = keybinds;
+        if (binds[i].code === code) {
+            binds.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
+let keybinds = [];
+const binds = keybinds;
+const specialKeys = ["Tab", "Escape"];
+
+/**
+ * Run the associated function with a keybid
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {KeyboardEvent} e The keyboard event from the event listener
+ * @returns {void}
+ * @version 1.0
+ */
+document.body.addEventListener('keydown', (e) => {
+    if (specialKeys.indexOf(e.code) !== -1) {
+        e.preventDefault();
+    }
+    for (let i = 0; i < binds.length; i++) {
+        let data = binds[i];
+        if (e.code === data.code) {
+            data.func(data.on);
+            data.on = !data.on;
+        }
+    }
+});
+
+
+/**
+ * Check if the key released is configured for interacting with a UI element
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {KeyboardEvent} e The keyboard event from the event listener
+ * @returns {void}
+ * @version 1.2
+ */
+ document.addEventListener('keyup',function (e) {
+
+    if (e.code === getSettings().ui.chat.open && !typing) {
+
+        document.getElementById('chat-input').value = "";
+        typing = true
+        document.getElementById('chat-input').focus();
+
+    } else if (e.code === getSettings().ui.chat.send && typing) {
+
+        document.getElementById('chat-input').blur();
+        typing = false;
+
+        if (document.getElementById('chat-input').value != "") {
+
+            sendData({
+                'data': document.getElementById('chat-input').value,
+                'type': 'chatMessage'
+            })
+
+            document.getElementById('chat-input').value = "";
+
+        }
+    } else if (e.code === getSettings().ui.scores) {
+
+        e.preventDefault();
+        hideScoresMenu();
+
+    }
+})
+
+document.getElementById('chat-input').addEventListener('focus', (e) => {
+    if (!typing) typing = true;
+});
+
+const defaultSettings = {
+    "movement": {
+        "forward": "KeyW",
+        "left": "KeyA",
+        "right": "KeyD",
+        "backward": "KeyS",
+        "jump": "Space"
+    },
+    "test": {
+        "key": "KeyX"
+    },
+    "ui": {
+        "scores": "Tab",
+        "chat": {
+            "open": "KeyY",
+            "send": "Enter"
+        },
+        "sidemenu": "Escape"
+    }
+}
+
+function test() {
+    console.log('Binded Key')
+}
+
+// Map binds
+addKeyBind(test, getSettings().test.key);
+addKeyBind(showScoresMenu, getSettings().ui.scores);
+addKeyBind(toggleSideMenu, getSettings().ui.sidemenu);
+
+/**
+ * Display the scores menu
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function toggleSideMenu() {
+    document.getElementById('menu').classList.toggle('hidden');
+}
+
+// Handler for pointer locking
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+
+let locked = false;
+
+function lockChangeAlert() {
+  if (document.pointerLockElement === document.body ||
+      document.mozPointerLockElement === document.body) {
+    if (!locked) {
+        globalHandler.log('The pointer lock status is now locked','Debug');
+        if (document.getElementById('menu').classList.length === 0) {
+            // Hide the menu
+            toggleSideMenu();
+        };
+        locked = true;
+    }
+  } else {
+    globalHandler.log('The pointer lock status is now unlocked', 'Debug');  
+    if (locked) {
+        if (document.getElementById('menu').classList.length === 1) {
+            // Show the menu
+            toggleSideMenu();
+        }
+        locked = false;
+    }
+  }
+}
+
+/**
+ * A function in globalHandler (globalHandler.getSettings)
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.getSettings = () => getSettings();
+
+
+// temp 
+resetSettings();

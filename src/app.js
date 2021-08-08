@@ -14,7 +14,8 @@ const connection = mysql.createConnection({
 	host     : process.env.MYSQL_HOST || 'localhost',
 	user     : process.env.MYSQL_USERNAME || 'root',
 	password : process.env.MYSQL_PASSWORD || '',
-	database : process.env.MYSQL_DATABASE || 'csc'
+	database : process.env.MYSQL_DATABASE || 'csc',
+    port: process.env.MYSQL_PORT || 3306
 });
 
 /**
@@ -369,7 +370,7 @@ app.post('/shell/mysql', async function(req, res) {
 })
 
 app.get('/api/friends/:id', (req, res) => {
-    connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ?', [req.params.id], function(error, results, fields) {
+    connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {
         if (error) throw error;
         res.json({'players':results});
         res.end();
@@ -409,57 +410,23 @@ app.get('/api/games/:id', (req, res) => {
     });
 })
 
-app.get('/api/live', (req, res) => {
-    connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE (UNIX_TIMESTAMP(g.startTime)+duration) > ? AND UNIX_TIMESTAMP(g.startTime) < ?', [req.params.id], function(error, results, fields) {
+app.get('/api/stats', (req, res) => {
+    connection.query('SELECT COUNT(isOnline) AS userCount, COUNT(CASE WHEN isOnline = true THEN 1 END) AS onlineCount FROM users;', function(error, results, fields) {
+        results = results[0];
         if (error) throw error;
-        let json = {
-            'map': results[0].map,
-            'mode': results[0].mode,
-            'startTime': results[0].startTime,
-            'duration': results[0].duration,
-            'winner': results[0].winner,
-            'players': []
-        };
-        for (let i=0;i<results.length; i++) {
-            json.players.push({
-                'id': results[i].id,
-                'username': results[i].username,
-                'curRank': results[i].curRank,
-                'kills': results[i].kills,
-                'assists': results[i].assists,
-                'deaths': results[i].deaths
-            });
-        }
-
-        res.json(json);
+        res.json(results);
         res.end();
     });
 })
 
+
 app.get('/api/updates/:page', (req, res) => {
     // Get the most recent updates
     // page defaults to 0 then 1 to get updates 6-10 etc.
-    res.json({
-        'updates': [
-            {
-                'added': 1627890529596,
-                'title': 'Release Notes for 2/8/2021',
-                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
-                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
-            },
-            {
-                'added': 1627890529595,
-                'title': 'Release Notes for 1/8/2021',
-                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
-                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
-            },
-            {
-                'added': 1627890529594,
-                'title': 'Release Notes for 31/7/2021',
-                'link': 'https://github.com/s3ansh33p/Computer-Science-ATAR/commit/83470e8cf54bd1b6ccc4c9210d2908e47ef2945b',
-                'content': '**Markdown Content** \n - 1\n - 2\n Something like this'
-            },
-        ]
+    connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {
+        if (error) throw error;
+        res.json({results});
+        res.end();
     });
     res.end();
 })
@@ -469,7 +436,7 @@ app.post('/auth', function(req, res) {
     const password = req.body.password;
 	if (email && password) {
         const hash = encrypt(Buffer.from(password, 'utf8'));
-		connection.query('SELECT * FROM users WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
+		connection.query('SELECT u.id, u.username, u.email, u.avatar, u.registered, u.curRank, u.isAdmin, u.isOnline, COUNT(r.userid) AS gameCount FROM users u INNER JOIN results r ON u.id = r.userid WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
             if (error) throw error;
 			if (results.length > 0) {
 				req.session.loggedin = true;
@@ -480,6 +447,7 @@ app.post('/auth', function(req, res) {
                 req.session.curRank = results[0].curRank;
                 req.session.userID = results[0].id;
                 req.session.isAdmin = results[0].isAdmin;
+                req.session.gameCount = results[0].gameCount;
 				res.redirect('/home');
 			} else {
                 req.session.loginerror = true;
@@ -521,16 +489,14 @@ app.post('/auth-register', function(req, res) {
 app.get('/home', function(req, res) {
 	if (req.session.loggedin) {
             res.render(path.join(__dirname, '/views/ui'), {
-            title: 'Home',
+            title: 'Play',
             type: runtime,
             ranks: ['Unranked (I)', 'Bronze (II)','Bronze (III)','Silver (IV)','Silver (V)','Gold (VI)','Gold (VII)','Platinum (VIII)','Platinum (IX)','Legend (X)','Max'],
             session: req.session
         });
-        res.end();
 	} else {
         res.redirect('/login');
 	}
-	res.end();
 });
 
 app.get('/403', (req, res) => {

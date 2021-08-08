@@ -275,29 +275,25 @@ var term = $('#terminal').terminal({
             }
         }
     },
-    live: function() {
+    stats: function() {
         // Todo: create API for info
-        spinnerText = 'Fetching live data from internal APIs';
+        spinnerText = 'Fetching stats data from internal APIs';
         start();
-        setTimeout(() => {
-            spinnerText = 'Pass 1/4';
-        }, 400);
-        setTimeout(() => {
-            spinnerText = 'Pass 2/4';
-        }, 600);
-        setTimeout(() => {
-            spinnerText = 'Pass 3/4';
-        }, 1100);
-        setTimeout(() => {
-            spinnerText = 'Pass 4/4';
-        }, 1600);
-        setTimeout(() => {
-            spinnerText = 'Tabulating data';
-        }, 2100);
-        setTimeout(() => {
-            end();
-            this.echo($(`<span>Live statistics as at ${new Date().toLocaleTimeString()}<br><br>Online Players: 13<br>Active Games: 2<br><br>Total Players: 42<br>Total Games: 14</span>`));
-        }, 2900);
+        $.ajax({
+                url: '<%= type; %>/api/stats',
+                timeout: 1500,
+                error: function () {
+                    term.echo('Stats API timed out.');
+                },
+                success: function (payload) {
+                    if (payload.error) {
+                        term.echo($(`<span>${payload.error}</span><br><br>`));
+                    } else {
+                        term.echo($(`<span>Statistics as at ${new Date().toLocaleTimeString()}<br><br>Online Players: ${payload.onlineCount}<br>Total Players: ${payload.userCount}</span><br><br>`));
+                    }
+                }
+            })
+        end();
     },
     sudo: function(...args) {
         let options = ($.terminal.parse_options(args))["_"];
@@ -329,14 +325,18 @@ var term = $('#terminal').terminal({
             term.pause();
 
             if (options[0].toUpperCase() === "UPDATE") {
+                term.exec('chat Server is restarting.');
+                term.exec('chat You will be disconnnected automatically.');
                 term.exec('sudo cd .. && git pull');
                 term.exec('sudo cd .. && npm run build');
                 term.exec('sudo cd .. && npm run build:prod');
                 term.exec('sudo pm2 restart app.js')
             } else if (options[0].toUpperCase() === "RESTART") {
+                term.exec('chat Server is restarting.');
+                term.exec('chat You will be disconnnected automatically.');
                 term.exec('sudo pm2 restart app.js');
             } else {
-                term.echo('Invalid argument');
+                term.exec('help server');
             }
             term.resume();
             
@@ -541,7 +541,7 @@ const commands = [
         'descriptor': 'Clears the screen.'
     },{
         'name': 'COLOR',
-        'descriptor': 'Sets the default console foreground and background colors.',
+        'descriptor': 'Sets console foreground and background colors.',
         'arguments': [{
             'attr': 'Specifies color attribute of console output'
         }],
@@ -607,9 +607,6 @@ const commands = [
             'gameid': 'displays game information for that game'
         }]
     },{
-        'name': 'LIVE',
-        'descriptor': 'Returns live information through the internal API.'
-    },{
         'name': 'HELP',
         'descriptor': 'Provides Help information for commands.',
         'arguments': [{
@@ -644,6 +641,9 @@ const commands = [
         'arguments': [{
             'command': 'the set of commands to run'
         }]
+    },{        
+        'name': 'STATS',
+        'descriptor': 'Returns statistics through the internal API.'
     },{
         'name': 'SUDO',
         'descriptor': 'Runs a command on the server',

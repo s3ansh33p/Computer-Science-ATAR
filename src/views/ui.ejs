@@ -65,17 +65,21 @@
                         <div class="d-flex flex-column my-2">
                             <div class="row">
                                 <div class="d-flex flex-nowrap align-items-center mb-2">
-                                    <img src="./assets/author.png" class="md-image p-0" alt="...">
+                                    <img src="./assets/ranks/<%= session.curRank %>.png" class="md-image p-0" alt="...">
                                     <p class="mb-0 ms-2"><%= ranks[session.curRank]; %></p>
                                 </div>
-                                <p class="mb-2"><%= ranks[session.curRank+1]; %></p>
+                                <p class="mb-2" id="rank-text"><%= ranks[session.curRank+1]; %></p>
                             </div>
-                            <div class="progress bg-900">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress bg-900 mb-1">
+                                <div id="rank-progress" class="progress-bar bg-warning" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                     </div>
                     <div class="card list-group-item border-0 bg-700 text-warning mx-3 m-1 friend-list overflow-auto">
+                        <div class="d-flex align-items-center" id="friends-loader">
+                            <div class="lds-dual-ring"></div>
+                            <h5 class="m-0 text-white ms-2">Loading...</h5>
+                        </div>
                         <ol class="p-0 m-0" id="friends">
                         </ol>
                     </div>
@@ -211,6 +215,19 @@
         <script src="js/ui.js"></script>
         <script>
             const userid = '<%= session.userID %>';
+            const gameCount = '<%= session.gameCount %>';
+            const rank = '<%= session.curRank %>';
+
+            function renderProgress() {
+                const diffs = [1, 3, 5, 10, 15];
+                let max = 20;
+                if (rank < 4) {
+                    max = diffs[rank];
+                }
+                let value = (gameCount/max)*100;
+                $('#rank-progress').attr('aria-valuenow', value).css('width', value+'%');
+                $('#rank-text').text(`${$('#rank-text').text()} - ${gameCount}/${max} Game${(max === 1) ? '' : 's'}`);
+            }
             function getFriends() {
                 try {
                     $.ajax({
@@ -220,10 +237,9 @@
                             console.log('Friends API timed out.');
                         },
                         success: function (payload) {
-                            console.log('Success');
+                            $('#friends-loader').remove();
                             const friendsContainer = document.getElementById('friends');
                             for (let i=0; i<payload.players.length; i++) {
-                                console.log(payload.players[i]);
                                 let onlineText = (payload.players[i].isOnline) ? 'online' : 'offline';
                                 friendsContainer.innerHTML += `<li class="d-flex align-items-center my-2 ${onlineText}">
                                 <img src="${(payload.players[i].avatar != null ) ? payload.players[i].avatar : './assets/author.png'}" class=" md-image friend-image p-0" alt="...">
@@ -241,7 +257,7 @@
                 }
             }
             $( document ).ready(function() {
-                console.log( "ready!" );
+                renderProgress();
                 getFriends();
             });
         </script>

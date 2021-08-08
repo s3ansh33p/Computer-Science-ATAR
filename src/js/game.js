@@ -381,23 +381,23 @@ function controls( deltaTime ) {
 
     if ( playerOnFloor && !typing && inGame) {
 
-        if ( keyStates[ 'KeyW' ] ) {
+        if ( keyStates[ globalHandler.getSettings().movement.forward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );
         }
 
-        if ( keyStates[ 'KeyS' ] ) {
+        if ( keyStates[ globalHandler.getSettings().movement.backward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( - speed * deltaTime ) );
         }
 
-        if ( keyStates[ 'KeyA' ] ) {
+        if ( keyStates[ globalHandler.getSettings().movement.left ] ) {
             playerVelocity.add( getSideVector().multiplyScalar( - speed * deltaTime ) );
         }
 
-        if ( keyStates[ 'KeyD' ] ) {
+        if ( keyStates[ globalHandler.getSettings().movement.right ] ) {
             playerVelocity.add( getSideVector().multiplyScalar( speed * deltaTime ) );
         }
 
-        if ( keyStates[ 'Space' ] ) {
+        if ( keyStates[ globalHandler.getSettings().movement.jump ] ) {
             playerVelocity.y = 11;
         }
 

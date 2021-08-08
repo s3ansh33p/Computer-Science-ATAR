@@ -237,6 +237,38 @@ body.center {
         overscroll-behavior: none;
     }
 
+    #menu {
+        position: absolute;
+        width: 150px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        font-size: 2rem;
+        z-index: 10002;
+
+        &.hidden {
+            display: none;
+        }
+
+        .blur {
+            height: 100%;
+            width: 100%;
+            z-index: 10001;
+            backdrop-filter: blur(15px);
+            position: absolute;
+            
+        }
+
+        .content {
+            z-index: inherit;
+            justify-content: space-between;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+    }
+
     #loader {
         position: absolute;
         background: black;
@@ -653,6 +685,31 @@ body.center {
         }
    }
 
+   .lds-dual-ring {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+  }
+  .lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 32px;
+    height: 32px;
+    margin: 4px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
    .release-notes {
        height: calc(100vh - 68px);
    }
@@ -774,6 +831,10 @@ body.center {
 
 .h-24 {
     height: 24px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
 
 input:focus-visible {

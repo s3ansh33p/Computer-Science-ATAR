@@ -25,7 +25,9 @@ https://dev.seanmcginty.space
   
 ## Environment Variables
 
-To run this project, you will need to add the following environment variables to your .env file
+To run this project, you will need to add the following environment variables to your .env file. Some of the values that I use in my project we need to be changed to suit your configuration.
+
+**FOMART:** `NAME` - my value for development
 
 `MYSQL_HOST` - localhost
 
@@ -34,6 +36,8 @@ To run this project, you will need to add the following environment variables to
 `MYSQL_USERNAME` - root
 
 `MYSQL_PASSWORD` - pass
+
+`MYSQL_PORT` - 3309
 
 `ENC_KEY` - crypto.randomBytes(16).toString('hex')
 
