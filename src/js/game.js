@@ -158,15 +158,7 @@ document.addEventListener( 'keyup', ( event ) => {
 
 document.addEventListener( 'mousedown', (e) => {
 
-    let cancel = false;
-
-    for (let i=0; i<e.path.length; i++) {
-        if  (e.path[i].id === "menu") {
-            cancel = true;
-        }
-    }
-
-    if (inGame && !typing && !cancel) document.body.requestPointerLock();
+    if (inGame && !typing && !pointerCheck(e)) document.body.requestPointerLock();
 
 } );
 
@@ -192,17 +184,17 @@ function onWindowResize() {
 
 }
 
+function pointerCheck(e) {
+    for (let i=0; i<e.path.length; i++) {
+        if (e.path[i].id === "gameMenu-0") return false; // Return to game option
+        if  (e.path[i].id === "menu" || e.path[i].id === "settings") return true;
+    }
+    return false;
+}
+
 document.addEventListener( 'click', (e) => {
 
-    let cancel = false;
-
-    for (let i=0; i<e.path.length; i++) {
-        if  (e.path[i].id === "menu") {
-            cancel = true;
-        }
-    }
-
-    if (inGame && !typing && !cancel) {
+    if (inGame && !typing && !pointerCheck(e)) {
 
         const sphere = spheres[ sphereIdx ];
 

@@ -398,12 +398,25 @@ function updateGameTimers() {
  * @todo Attach functions to menu
  */
 function gameMenu(index) {
-    if (index === 4) {
-        globalHandler.log('Leaving game', 'Debug');
+
+    if (index === 0) {
+        // Return to game
+        toggleSideMenu();
+    } else if (index === 1) {
+        // Settings
+        document.getElementById('settings').classList.toggle('hidden');
+    } else if (index === 2) {
+        // Call vote to kick player
+    } else if (index === 3) {
+        // Inventory
+    } else if (index === 4) {
+        // Return to home UI
+        // Add a confirm exit modal...
         window.location.href = window.location.href.slice(0, window.location.href.lastIndexOf('/'))+'/home';
     } else {
-        globalHandler.log(`Clicked on menu index ${index}`, 'Debug');
+        globalHandler.log('Invalid index on game menu', 'Error');
     }
+
 };
 
 // Attach listeners to the game menu
@@ -637,6 +650,7 @@ addKeyBind(toggleSideMenu, getSettings().ui.sidemenu);
  * @version 1.0
  */
 function toggleSideMenu() {
+    document.getElementById('settings').classList.add('hidden');
     document.getElementById('menu').classList.toggle('hidden');
 }
 

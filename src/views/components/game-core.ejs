@@ -5,6 +5,185 @@
     </div>
     <p class="loading-item">Loading...</p>
 </div>
+<div id="settings" class="position-absolute justify-content-end d-flex h-100 w-100 hidden">
+    <div class="settings-container d-flex justify-content-center align-items-center">
+        <div class="blur"></div>
+        <div class="container h-100 py-2">
+            <h2>GAME SETTINGS</h2>
+            <ul class="nav nav-pills mb-3" id="settings-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="settings-input-tab" data-bs-toggle="pill" data-bs-target="#settings-input" type="button" role="tab" aria-controls="settings-input" aria-selected="true">Keyboard / Mouse</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-game-tab" data-bs-toggle="pill" data-bs-target="#settings-game" type="button" role="tab" aria-controls="settings-game" aria-selected="false">Game Settings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-audio-tab" data-bs-toggle="pill" data-bs-target="#settings-audio" type="button" role="tab" aria-controls="settings-audio" aria-selected="false">Audio Settings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-video-tab" data-bs-toggle="pill" data-bs-target="#settings-video" type="button" role="tab" aria-controls="settings-video" aria-selected="false">Video Settings</button>
+            </li>
+            </ul>
+            <div class="tab-content" id="settings-tabContent">
+                <div class="tab-pane fade show active" id="settings-input" role="tabpanel" aria-labelledby="settings-input-tab">
+                    <div class="container">
+                        <h4 class="mb-2">Mouse</h4>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Reverse Mouse</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-mouse-1" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-mouse-1">
+                                      <li class="dropdown-item cursor-pointer">Yes</li>
+                                      <li class="dropdown-item cursor-pointer">No</li>
+                                    </ul>
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Mouse Sensitivity</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="0" max="100" id="settings-mouse-2">
+                            </div>
+                        </div>
+                        <h4 class="mb-2 mt-5">Movement Keys</h4>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Move Forward</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="text" class="form-control" id="settings-movement-1" aria-describedby="settings-movement-1">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Move Backward</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="text" class="form-control" id="settings-movement-2" aria-describedby="settings-movement-2">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Move Left</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="text" class="form-control" id="settings-movement-3" aria-describedby="settings-movement-3">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Move Right</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="text" class="form-control" id="settings-movement-4" aria-describedby="settings-movement-4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-game" role="tabpanel" aria-labelledby="settings-game-tab">
+                    <div class="container">
+                        <h4 class="mb-2">Game</h4>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable Developer Console (~)</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownSettings1" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownSettings1">
+                                      <li class="dropdown-item cursor-pointer">Yes</li>
+                                      <li class="dropdown-item cursor-pointer">No</li>
+                                    </ul>
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-audio" role="tabpanel" aria-labelledby="settings-audio-tab">
+                    <div class="container">
+                        <h4 class="mb-2">Audio</h4>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Master Volume</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="0" max="100" id="settings-volume-1">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Music Volume</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="0" max="100" id="settings-volume-2">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Sound Effects Volume</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="0" max="100" id="settings-volume-3">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Audio Output Configuration</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownSettings1" data-bs-toggle="dropdown" aria-expanded="false">
+                                      STEREO HEADPHONES
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownSettings1">
+                                      <li class="dropdown-item cursor-pointer">STEREO HEADPHONES</li>
+                                      <li class="dropdown-item cursor-pointer">[AUTO POPULATE]</li>
+                                    </ul>
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Play Audio When Game Not Focused</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownSettings1" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownSettings1">
+                                      <li class="dropdown-item cursor-pointer">Yes</li>
+                                      <li class="dropdown-item cursor-pointer">No</li>
+                                    </ul>
+                                  </div>
+                            </div>
+                        </div>
+                        <h4 class="mb-2 mt-5">Music</h4>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="settings-video" role="tabpanel" aria-labelledby="settings-video-tab">
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Settings Menu Goes Here</p> 
+                        </div>
+                        <div class="col-6">
+                            <p>Settings Menu Goes Here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div id="menu" class="hidden">
     <div class="blur"></div>
     <div class="content">
@@ -28,7 +207,7 @@
     </div>
 </div>
 
-<div id="info">v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div>
+<div id="info"><div>v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div></div>
 
 <div id="chat">
     <div id="chat-msg-container"></div>

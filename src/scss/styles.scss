@@ -237,6 +237,46 @@ body.center {
         overscroll-behavior: none;
     }
 
+    #settings {
+
+        &.hidden {
+            display: none!important;
+        }
+        
+        .settings-container {
+            z-index: 10003;
+            width: calc(100% - 150px);
+            flex-flow: row-reverse;
+
+            > * {
+                z-index: inherit;
+            }
+
+            .nav-link {
+                padding: .25rem 1rem;
+                color: white;
+                background: transparent;
+                font-weight: bold;
+                border: none;
+                border-radius: 0;
+
+                &.active {
+                    border-bottom: 3px solid white;
+                    border-top: none;
+                    border-left: none;
+                    border-right: none;
+                }
+            }
+        }
+    }
+
+    .blur {
+        height: 100%;
+        width: calc(100% - 150px);
+        backdrop-filter: blur(15px);
+        position: absolute;
+    }
+
     #menu {
         position: absolute;
         width: 150px;
@@ -252,12 +292,8 @@ body.center {
         }
 
         .blur {
-            height: 100%;
-            width: 100%;
             z-index: 10001;
-            backdrop-filter: blur(15px);
-            position: absolute;
-            
+            width: 100%;
         }
 
         .content {
