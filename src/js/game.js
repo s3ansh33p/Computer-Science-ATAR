@@ -156,9 +156,17 @@ document.addEventListener( 'keyup', ( event ) => {
 
 } );
 
-document.addEventListener( 'mousedown', () => {
+document.addEventListener( 'mousedown', (e) => {
 
-    if (inGame && !typing) document.body.requestPointerLock();
+    let cancel = false;
+
+    for (let i=0; i<e.path.length; i++) {
+        if  (e.path[i].id === "menu") {
+            cancel = true;
+        }
+    }
+
+    if (inGame && !typing && !cancel) document.body.requestPointerLock();
 
 } );
 
@@ -184,9 +192,17 @@ function onWindowResize() {
 
 }
 
-document.addEventListener( 'click', () => {
+document.addEventListener( 'click', (e) => {
 
-    if (inGame && !typing) {
+    let cancel = false;
+
+    for (let i=0; i<e.path.length; i++) {
+        if  (e.path[i].id === "menu") {
+            cancel = true;
+        }
+    }
+
+    if (inGame && !typing && !cancel) {
 
         const sphere = spheres[ sphereIdx ];
 

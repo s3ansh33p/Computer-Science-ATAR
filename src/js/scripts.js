@@ -406,6 +406,14 @@ function gameMenu(index) {
     }
 };
 
+// Attach listeners to the game menu
+for (let i=0; i<5; i++) {
+    document.getElementById(`gameMenu-${i}`).addEventListener('click', (e) => {
+        e.preventDefault();
+        gameMenu(i);
+    });
+};
+
 /**
  * Update game information in the tab ui
  * @author  Sean McGinty <newfolderlocation@gmail.com>
@@ -549,7 +557,6 @@ document.body.addEventListener('keydown', (e) => {
         }
     }
 });
-
 
 /**
  * Check if the key released is configured for interacting with a UI element
