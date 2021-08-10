@@ -436,7 +436,7 @@ app.post('/auth', function(req, res) {
     const password = req.body.password;
 	if (email && password) {
         const hash = encrypt(Buffer.from(password, 'utf8'));
-		connection.query('SELECT u.id, u.username, u.email, u.avatar, u.registered, u.curRank, u.isAdmin, u.isOnline, COUNT(r.userid) AS gameCount FROM users u INNER JOIN results r ON u.id = r.userid WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
+		connection.query('SELECT id, username, email, avatar, registered, curRank, isAdmin, isOnline FROM users WHERE email = ? AND pass = ?', [email, hash], function(error, results, fields) {
             if (error) throw error;
 			if (results.length > 0) {
 				req.session.loggedin = true;
@@ -447,13 +447,16 @@ app.post('/auth', function(req, res) {
                 req.session.curRank = results[0].curRank;
                 req.session.userID = results[0].id;
                 req.session.isAdmin = results[0].isAdmin;
-                req.session.gameCount = results[0].gameCount;
-				res.redirect('/home');
+                // Get games
+                connection.query('SELECT COUNT(r.userid) AS gameCount from results r WHERE r.userid = ?', [req.session.userID], function(error, results, fields) {
+                    if (error) throw error;
+                    req.session.gameCount = results[0].gameCount.toString();
+                    res.redirect('/home');
+                });
 			} else {
                 req.session.loginerror = true;
 				res.redirect('/login');
 			}			
-			res.end();
 		});
 	} else {
 		res.send('Please enter Username and Password!');

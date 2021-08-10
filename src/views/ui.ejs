@@ -226,7 +226,7 @@
                 }
                 let value = (gameCount/max)*100;
                 $('#rank-progress').attr('aria-valuenow', value).css('width', value+'%');
-                $('#rank-text').text(`${$('#rank-text').text()} - ${gameCount}/${max} Game${(max === 1) ? '' : 's'}`);
+                $('#rank-text').text(`${$('#rank-text').text()} - ${gameCount}/${max} Games`);
             }
             function getFriends() {
                 try {
