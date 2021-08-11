@@ -63,6 +63,8 @@ scene2.background = new THREE.Color( 0xff7700 );
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 camera.rotation.order = 'YXZ';
 
+const raycaster = new THREE.Raycaster();
+
 const ambientlight = new THREE.AmbientLight( 0x6688cc );
 scene.add( ambientlight );
 
@@ -106,27 +108,6 @@ stats.domElement.style.top = '0px';
 container.appendChild( stats.domElement );
 
 const GRAVITY = 30;
-
-const NUM_SPHERES = 20;
-const SPHERE_RADIUS = 0.2;
-
-const sphereGeometry = new THREE.SphereGeometry( SPHERE_RADIUS, 32, 32 );
-const sphereMaterial = new THREE.MeshStandardMaterial( { color: 0x888855, roughness: 0.8, metalness: 0.5 } );
-
-const spheres = [];
-let sphereIdx = 0;
-
-for ( let i = 0; i < NUM_SPHERES; i ++ ) {
-
-    const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-    sphere.castShadow = true;
-    sphere.receiveShadow = true;
-
-    scene.add( sphere );
-
-    spheres.push( { mesh: sphere, collider: new THREE.Sphere( new THREE.Vector3( 0, - 100, 0 ), SPHERE_RADIUS ), velocity: new THREE.Vector3() } );
-
-}
 
 const worldOctree = new Octree();
 
@@ -192,22 +173,74 @@ function pointerCheck(e) {
     return false;
 }
 
+let arrowHelpers = [];
+
 document.addEventListener( 'click', (e) => {
 
     if (inGame && !typing && !pointerCheck(e)) {
 
-        const sphere = spheres[ sphereIdx ];
-
         camera.getWorldDirection( playerDirection );
 
-        sphere.collider.center.copy( playerCollider.end );
-        sphere.velocity.copy( playerDirection ).multiplyScalar( 30 );
+        let mouse = { x : ( e.clientX / window.innerWidth ) * 2 - 1, y : ( e.clientY / window.innerHeight ) * 2 + 1 };
 
-        sphereIdx = ( sphereIdx + 1 ) % spheres.length;
+        raycaster.setFromCamera( mouse, camera );   
+        raycaster.ray.direction.set(raycaster.ray.direction.x, raycaster.ray.direction.y - 0.85); // Wierd bug to sort out.
+        console.log(raycaster);
+
+        let intersects = raycaster.intersectObjects( scene.children, true );
+
+        for (let i = 0; i < arrowHelpers.length; i++) {
+            scene.remove( arrowHelpers[i] );
+        }
+
+        arrowHelpers = [];
+        
+        for (let i = 0; i < intersects.length; i++) {
+            if (intersects[i].object.name.slice(0,12) === "CollisionBox") {
+                // console.log(intersects[i].object.name);
+            } else {
+                arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));
+                scene.add( arrowHelpers[arrowHelpers.length-1]);
+                console.log(intersects[i]); 
+
+            }
+            /*
+                An intersection has the following properties :
+                    - object : intersected object (THREE.Mesh)
+                    - distance : distance from camera to intersection (number)
+                    - face : intersected face (THREE.Face3)
+                    - faceIndex : intersected face index (number)
+                    - point : intersection point (THREE.Vector3)
+                    - uv : intersection point in the object's UV coordinates (THREE.Vector2)
+            */
+        }
 
     }
 
 } );
+
+// Wireframe toggle function
+function enableWireframe(enabled = true) {
+
+    scene.traverse( child => {
+
+        if ( child.isMesh ) {
+
+            // child.material.wireframe = enabled;
+            
+            if ( child.name === "Mesh" ) { // Other player 
+                console.log(child);
+                child.material.wireframe = enabled;
+            } else {
+                child.material.transparent = enabled;
+                child.material.opacity = 0.2;
+            }
+
+        }
+
+    });
+
+}
 
 /**
  * Player collision handler
@@ -262,83 +295,6 @@ function updatePlayer( deltaTime ) {
     playerCollisions();
 
     camera.position.copy( playerCollider.end );
-
-}
-
-/**
- * Sphere collision handler
- * @author  https://github.com/mrdoob/three.js
- * @returns {void}
- * @version 1.0
- */
-function spheresCollisions() {
-
-    for ( let i = 0; i < spheres.length; i ++ ) {
-
-        const s1 = spheres[ i ];
-
-        for ( let j = i + 1; j < spheres.length; j ++ ) {
-
-            const s2 = spheres[ j ];
-
-            const d2 = s1.collider.center.distanceToSquared( s2.collider.center );
-            const r = s1.collider.radius + s2.collider.radius;
-            const r2 = r * r;
-
-            if ( d2 < r2 ) {
-
-                const normal = s1.collider.clone().center.sub( s2.collider.center ).normalize();
-                const v1 = normal.clone().multiplyScalar( normal.dot( s1.velocity ) );
-                const v2 = normal.clone().multiplyScalar( normal.dot( s2.velocity ) );
-                s1.velocity.add( v2 ).sub( v1 );
-                s2.velocity.add( v1 ).sub( v2 );
-
-                const d = ( r - Math.sqrt( d2 ) ) / 2;
-
-                s1.collider.center.addScaledVector( normal, d );
-                s2.collider.center.addScaledVector( normal, - d );
-
-            }
-
-        }
-
-    }
-
-}
-
-/**
- * Create and destroy spheres
- * @author  https://github.com/mrdoob/three.js
- * @returns {void}
- * @version 1.0
- */
-function updateSpheres( deltaTime ) {
-
-    spheres.forEach( sphere =>{
-
-        sphere.collider.center.addScaledVector( sphere.velocity, deltaTime );
-
-        const result = worldOctree.sphereIntersect( sphere.collider );
-
-        if ( result ) {
-
-            sphere.velocity.addScaledVector( result.normal, - result.normal.dot( sphere.velocity ) * 1.5 );
-            sphere.collider.center.add( result.normal.multiplyScalar( result.depth ) );
-
-        } else {
-
-            sphere.velocity.y -= GRAVITY * deltaTime;
-
-        }
-
-        const damping = Math.exp( - 1.5 * deltaTime ) - 1;
-        sphere.velocity.addScaledVector( sphere.velocity, damping );
-
-        spheresCollisions();
-
-        sphere.mesh.position.copy( sphere.collider.center );
-
-    } );
 
 }
 
@@ -449,6 +405,24 @@ function pauseAnim() {
     mixer.clipAction(animations[0]).stop()
 }
 
+let text;
+
+function loadText() {
+    const loader = new THREE.FontLoader();
+    loader.load( 'assets/font.json', function ( font ) {
+
+        const color = 0x006699;
+        const message = "Hi\nThere";
+        text = new THREE.Mesh( new THREE.ShapeGeometry(  font.generateShapes( message, 0.25 ) ), new THREE.LineBasicMaterial( { color: color, side: THREE.DoubleSide } ) );
+        
+        text.position.y = -10;
+        scene.add( text );
+        
+    } );
+}
+
+loadText();
+
 loader.load( 'scene.glb', ( gltf ) => {
 
     scene.add( gltf.scene );
@@ -512,6 +486,7 @@ function transferData() {
 
     // Send client packets to the server
     camera.getWorldDirection(playerDirection);
+
     if (Math.round(camera.position.x*playerPrecision)/playerPrecision != playerData.position.x || Math.round(camera.position.y*playerPrecision)/playerPrecision != playerData.position.y || Math.round(camera.position.z*playerPrecision)/playerPrecision != playerData.position.z || Math.round(THREE.Math.radToDeg( Math.atan2(playerDirection.x,playerDirection.z) )*playerPrecision)/playerPrecision != playerData.rotation) {
         playerData.position = {
             'x': Math.round(camera.position.x*playerPrecision)/playerPrecision,
@@ -526,6 +501,15 @@ function transferData() {
                             camera.position.z+Math.cos(THREE.Math.degToRad(camRotation))*0.5
                             );
             AK.rotation.set(0, THREE.Math.degToRad(270+camRotation), 0)
+        }
+
+        // Render player text 
+        if (text) {
+            text.position.set(camera.position.x+Math.sin(THREE.Math.degToRad(camRotation))*0.5,
+                camera.position.y-0.2,
+                camera.position.z+Math.cos(THREE.Math.degToRad(camRotation))*0.5
+            );
+            text.rotation.set(0, THREE.Math.degToRad(180+camRotation), 0);
         }
 
         document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
@@ -565,8 +549,6 @@ function animate() {
             
         updatePlayer( deltaTime );
             
-        updateSpheres( deltaTime );
-
         renderer.render( scene, camera );
         
         if ( mixer ) {
@@ -665,3 +647,6 @@ globalHandler.gameEndScreen = () => {
         scene.remove.apply(scene, scene.children); // Remove the main scene
     }, 1500);
 }
+
+// Testing functions
+globalHandler.wireframe = (enabled) => enableWireframe(enabled);

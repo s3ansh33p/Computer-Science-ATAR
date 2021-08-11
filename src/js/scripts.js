@@ -622,7 +622,8 @@ const defaultSettings = {
         "jump": "Space"
     },
     "test": {
-        "key": "KeyX"
+        "key": "KeyX",
+        "dev": "KeyQ"
     },
     "ui": {
         "scores": "Tab",
@@ -638,10 +639,12 @@ function test() {
     console.log('Binded Key')
 }
 
+let wireframeOn = false;
 // Map binds
 addKeyBind(test, getSettings().test.key);
 addKeyBind(showScoresMenu, getSettings().ui.scores);
 addKeyBind(toggleSideMenu, getSettings().ui.sidemenu);
+addKeyBind(() => {wireframeOn = !wireframeOn; globalHandler.wireframe(wireframeOn)}, getSettings().test.dev);
 
 /**
  * Display the scores menu
