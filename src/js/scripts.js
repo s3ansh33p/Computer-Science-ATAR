@@ -623,7 +623,8 @@ const defaultSettings = {
     },
     "test": {
         "key": "KeyX",
-        "dev": "KeyQ"
+        "dev": "KeyQ",
+        "stats": "KeyE"
     },
     "ui": {
         "scores": "Tab",
@@ -640,11 +641,13 @@ function test() {
 }
 
 let wireframeOn = false;
+let statsOn = false;
 // Map binds
 addKeyBind(test, getSettings().test.key);
 addKeyBind(showScoresMenu, getSettings().ui.scores);
 addKeyBind(toggleSideMenu, getSettings().ui.sidemenu);
 addKeyBind(() => {wireframeOn = !wireframeOn; globalHandler.wireframe(wireframeOn)}, getSettings().test.dev);
+addKeyBind(() => {statsOn = !statsOn; globalHandler.showStats(statsOn)}, getSettings().test.stats);
 
 /**
  * Display the scores menu
@@ -695,6 +698,14 @@ function lockChangeAlert() {
  */
 globalHandler.getSettings = () => getSettings();
 
+/**
+ * An array to store the other client information
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.otherPlayers = () => {return otherPlayers};
 
 // temp 
 resetSettings();

@@ -23,30 +23,32 @@ var manager = new THREE.LoadingManager();
  * @version 1.1
  */
 manager.onProgress = function ( item, loaded, total ) {
-  document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total * 100)*1000)/1000}%`; 
-  globalHandler.log(document.getElementsByClassName('loading-item')[0].innerText, "Loader")
-  document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
-  if (loaded === total) {
-      setTimeout(() => {
-        document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
-            for (let i=0; i<5; i++) {
-                const innerHMTL = `	<tr>
-                <td>47</td>
-                <td>
-                    <img src="./assets/author.png">
-                    <img src="./assets/author.png">
-                    s3ansh33p
-                </td>
-                <td>12</td>
-                <td>7</td>
-                <td>3</td>
-                <td>27</td>
-            </tr>
-            <tr class="spacer"></tr>`;
-            document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
-            document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
-            }
-        },300)
+    if (document.getElementsByClassName('loading-item')[0] !== undefined) {
+    document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total * 100)*1000)/1000}%`; 
+    globalHandler.log(document.getElementsByClassName('loading-item')[0].innerText, "Loader")
+    document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
+    if (loaded === total) {
+        setTimeout(() => {
+            document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
+                for (let i=0; i<5; i++) {
+                    const innerHMTL = `	<tr>
+                    <td>47</td>
+                    <td>
+                        <img src="./assets/author.png">
+                        <img src="./assets/author.png">
+                        s3ansh33p
+                    </td>
+                    <td>12</td>
+                    <td>7</td>
+                    <td>3</td>
+                    <td>27</td>
+                </tr>
+                <tr class="spacer"></tr>`;
+                document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
+                document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
+                }
+            },300)
+        }
     }
 };
 
@@ -104,6 +106,8 @@ container.appendChild( renderer.domElement );
 const stats = new Stats();
 stats.domElement.style.position = 'absolute';
 stats.domElement.style.top = '0px';
+stats.domElement.id = 'statsContainer';
+stats.showPanel(3);
 
 container.appendChild( stats.domElement );
 
@@ -198,10 +202,25 @@ document.addEventListener( 'click', (e) => {
         for (let i = 0; i < intersects.length; i++) {
             if (intersects[i].object.name.slice(0,12) === "CollisionBox") {
                 // console.log(intersects[i].object.name);
+            } else if (intersects[i].object.name === "Mesh") {
+                // Get direction unit vector
+                // Set point A to origin vector
+                // Set point B to colission vector
+                // Compare points with otherPlayers
+                // Check for hits
+                console.log("PlayerModelID: ", intersects[i].object.parent.parent.id)
+                console.log("Collision with Player Mesh: ", intersects[i].point); 
+                const otherPlayerID = playerModels.map(e => e.id).indexOf(intersects[i].object.parent.parent.id);
+                if (otherPlayerID !== -1) {
+                    console.log(otherPlayerID);
+                    console.log(globalHandler.otherPlayers())
+                    console.log(globalHandler.otherPlayers()[otherPlayerID].client);
+                } else {
+                    console.log("Invalid modelID");
+                }
             } else {
                 arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));
                 scene.add( arrowHelpers[arrowHelpers.length-1]);
-                console.log(intersects[i]); 
 
             }
             /*
@@ -229,7 +248,7 @@ function enableWireframe(enabled = true) {
             // child.material.wireframe = enabled;
             
             if ( child.name === "Mesh" ) { // Other player 
-                console.log(child);
+                // console.log(child);
                 child.material.wireframe = enabled;
             } else {
                 child.material.transparent = enabled;
@@ -381,19 +400,29 @@ loader.load( 'gun.glb', ( gltf ) => {
 
 } );
 
-let playerModel = 0; // could be just 'let playerModel;'
+let playerModels = [];
+let playerModel;
 let mixer; // Getting a basic animation working
 let animations;
-loader.load( 'player_t.glb', ( gltf ) => {
 
-    playerModel = gltf.scene;
-    scene.add( playerModel );
-    playerModel.position.set(-5,2,36);
-    playerModel.scale.set(0.06,0.06,0.06);
-    
-    mixer = new THREE.AnimationMixer(playerModel);
-    animations = gltf.animations;
-} );
+function loadPlayerModel() {
+    loader.load( 'player_t.glb', ( gltf ) => {
+
+        playerModel = gltf.scene;
+        scene.add( playerModel );
+        // playerModel.position.set(-5,2,36);
+        playerModel.scale.set(0.06,0.06,0.06);
+        
+        mixer = new THREE.AnimationMixer(playerModel);
+        animations = gltf.animations;
+
+        playerModels.push(playerModel);
+    } );
+}
+
+for (let i = 0; i < 10; i++) {
+    loadPlayerModel();
+}
 
 // callable from the main console with globalHandler.play()
 function playAnim() {
@@ -459,15 +488,6 @@ loader.load( 'scene.glb', ( gltf ) => {
 
 } );
 
-// Testing Cube
-// todo: need to rework how the extra players are 'added' into the scene
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-const cube = new THREE.Mesh( geometry, material );
-const cube2 = new THREE.Mesh( geometry, material );
-scene.add( cube );
-scene.add( cube2 );
-
 /**
  * Transfers data to the server and renders entities
  * @author  Sean McGinty <newfolderlocation@gmail.com>
@@ -477,12 +497,14 @@ scene.add( cube2 );
 function transferData() {
     // Render received data
     if (!connectedToServer) return;
-    let cubes = [playerModel, cube, cube2]
     for (let i=0; i<otherPlayers.length; i++) {
-        
-        cubes[i].position.set(otherPlayers[i].x || 0, otherPlayers[i].y - 1 || 0, otherPlayers[i].z || 0);
-        cubes[i].rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
+
+        if (playerModels[i]) {
+            playerModels[i].position.set(otherPlayers[i].x || 0, otherPlayers[i].y - 1 || 0, otherPlayers[i].z || 0);
+            playerModels[i].rotation.set( 0, THREE.Math.degToRad(otherPlayers[i].rotation), 0);
+        }
     }
+
 
     // Send client packets to the server
     camera.getWorldDirection(playerDirection);
@@ -523,6 +545,13 @@ function transferData() {
             },
             'type': 'playerUpdate'
         })
+    }
+}
+
+function showStats(enabled = true) {
+    const container = document.getElementById('statsContainer');
+    for (let i = 0; i<container.childElementCount; i++) {
+        container.children[i].style.display = (enabled) ? "block" : "none";
     }
 }
 
@@ -601,6 +630,27 @@ globalHandler.play = () => playAnim();
  * @version     1.0
  */
 globalHandler.stop = () => pauseAnim();
+
+/**
+ * A function in globalHandler (globalHandler.showStats)
+ * @author       Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.showStats = (enabled) => showStats(enabled);
+
+/**
+ * A function in globalHandler (globalHandler.loadPlayer)
+ * @author       Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.loadPlayer = () => loadPlayerModel();
+
+// Global access to player models.
+globalHandler.playerModels = playerModels;
 
 /**
  * An object to store the properties of the game
