@@ -86,24 +86,29 @@ wss.on('connection', (ws) => {
         message = new Uint8Array(message);
 
         if (message[0] === undefined) {
+            Logger.error(`Recieved malformed packet from client "${ws.id}"`);
             return;
         }
 
         if (message[0] === 0) {
 
+            Logger.game(`Recieved ping from client "${ws.id}"`);
             ws.send(new Uint8Array([0]).buffer);
 
         } else if (message[0] === 1) {
 
+            Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
             wss.broadcast({'message':message.slice(1,201),'client':ws.id}, 3)
 
         } else if (message[0] === 2) {
 
+            Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
             ws.playerData = message.slice(1);
             wss.broadcast({'message':ws.playerData,'client':ws.id}, 4)
 
         } else if (message[0] === 3) {
 
+            Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
             let authcode = decodeClient(message.slice(1,5));
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
@@ -115,6 +120,8 @@ wss.on('connection', (ws) => {
                     }
                 });
 
+            } else {
+                Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);
             }
 
         }
@@ -356,6 +363,7 @@ app.post('/shell/sudo', async function(req, res) {
 app.post('/shell/mysql', async function(req, res) {
     if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
         if (req.body.command) {
+            Logger.error(`Executed SQL: ${req.body.command}`);
             connection.query(req.body.command, function(error, results, fields) {
                 if (error) res.json(error);
                 res.json(results);
@@ -366,11 +374,13 @@ app.post('/shell/mysql', async function(req, res) {
             });
         }
     } else {
+        Logger.error(`Attempted to execute SQL: ${req.body.command}`);
         res.redirect('/403');
     }
 })
 
 app.get('/api/friends/:id', (req, res) => {
+    Logger.API(`Retreiving friends for ID: ${req.params.id}`);
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {
         if (error) throw error;
         res.json({'players':results});
@@ -379,6 +389,7 @@ app.get('/api/friends/:id', (req, res) => {
 })
 
 app.get('/api/games/:id', (req, res) => {
+    Logger.API(`Retreiving friends for ID: ${req.params.id}`);
     connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE r.gameid = ?', [req.params.id], function(error, results, fields) {
         if (error) throw error;
             if (results.length > 0) {
@@ -412,6 +423,7 @@ app.get('/api/games/:id', (req, res) => {
 })
 
 app.get('/api/stats', (req, res) => {
+    Logger.API(`Retreiving user stats`);
     connection.query('SELECT COUNT(isOnline) AS userCount, COUNT(CASE WHEN isOnline = true THEN 1 END) AS onlineCount FROM users;', function(error, results, fields) {
         results = results[0];
         if (error) throw error;
@@ -422,6 +434,7 @@ app.get('/api/stats', (req, res) => {
 
 
 app.get('/api/updates/:page', (req, res) => {
+    Logger.API(`Retreiving updates for ID: ${req.params.id}`);
     // Get the most recent updates
     // page defaults to 0 then 1 to get updates 6-10 etc.
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {

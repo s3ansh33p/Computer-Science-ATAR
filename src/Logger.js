@@ -33,7 +33,12 @@ class Logger {
 
     static API(...args) {
         args = this.formatInput(args)
-        console.log(this.prefix + ' ' + chalk.cyan('[API]') + ' ' + args.join(' '))
+        console.log(this.prefix + ' ' + chalk.purple('[API]') + ' ' + args.join(' '))
+    }
+
+    static game(...args) {
+        args = this.formatInput(args)
+        console.log(this.prefix + ' ' + chalk.yellow('[GAME]') + ' ' + args.join(' '))
     }
 
 }
