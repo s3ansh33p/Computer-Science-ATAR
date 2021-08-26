@@ -7,6 +7,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const { encrypt } = require('./server/aes');
 const { exec } = require("child_process");
+const Logger = require('./Logger');
 
 const app = express();
 const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:3000' : 'https://dev.seanmcginty.space';
@@ -215,7 +216,7 @@ wss.generateID = function () {
 
 // Start the Websocket Server
 server.listen(wsport, () => {
-    console.log(`Server started on localhost:${server.address().port}`);
+    Logger.info(`Server started on localhost:${server.address().port}`);
 });
 
 // Setup routes
@@ -344,7 +345,7 @@ app.post('/shell/sudo', async function(req, res) {
         let command = req.body.command;
         if (command) {
             let result = await runCommand(command);
-            console.log(`Shell: ${command} | ${result}`);
+            Logger.shell(`Shell: ${command} | ${result}`);
             res.send(result);
         }
     } else {
@@ -517,5 +518,5 @@ app.get('*', (req, res) => {
 
 // Start the Express Server
 app.listen(port, () => {
-  console.log(`Listening at localhost:${port}`)
+  Logger.info(`Listening at localhost:${port}`)
 })

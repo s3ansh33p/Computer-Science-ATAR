@@ -13,5 +13,6 @@ module.exports = function renderMain() {
     sh.cp('-R', sourcePath, destPath)
 
     sh.cp('-R', upath.resolve(upath.dirname(__filename), '../src/app.js'), upath.resolve(upath.dirname(__filename), '../dist/app.js'))
+    sh.cp('-R', upath.resolve(upath.dirname(__filename), '../src/Logger.js'), upath.resolve(upath.dirname(__filename), '../dist/Logger.js'))
     sh.cp('-R', upath.resolve(upath.dirname(__filename), '../src/.env'), upath.resolve(upath.dirname(__filename), '../dist/.env'))
 };
