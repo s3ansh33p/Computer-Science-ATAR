@@ -7,7 +7,8 @@ import { Capsule } from '../examples/jsm/math/Capsule.js';
 // Default playerData
 let playerData = {
     position: {'x':0, 'y':0, 'z':0},
-    rotation: 0
+    rotation: 0,
+    health: 100
 }
 
 // A manager for the loading screen
@@ -208,13 +209,19 @@ document.addEventListener( 'click', (e) => {
                 // Set point B to colission vector
                 // Compare points with otherPlayers
                 // Check for hits
-                console.log("PlayerModelID: ", intersects[i].object.parent.parent.id)
+                // console.log("PlayerModelID: ", intersects[i].object.parent.parent.id)
                 console.log("Collision with Player Mesh: ", intersects[i].point); 
                 const otherPlayerID = playerModels.map(e => e.id).indexOf(intersects[i].object.parent.parent.id);
                 if (otherPlayerID !== -1) {
-                    console.log(otherPlayerID);
-                    console.log(globalHandler.otherPlayers())
+                    // console.log(otherPlayerID);
+                    // console.log(globalHandler.otherPlayers())
                     console.log(globalHandler.otherPlayers()[otherPlayerID].client);
+                    sendData({
+                        'data': {
+                            'clientID': globalHandler.otherPlayers()[otherPlayerID].client
+                        },
+                        'type': 'damage'
+                    })
                 } else {
                     console.log("Invalid modelID");
                 }
@@ -603,6 +610,15 @@ function animate() {
  * @version     1.1
  */
 window.globalHandler = window.globalHandler || {};
+
+/**
+ * A variable in globalHandler (globalHandler.playerData)
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.playerData = playerData;
 
 /**
  * A function in globalHandler (globalHandler.animate)

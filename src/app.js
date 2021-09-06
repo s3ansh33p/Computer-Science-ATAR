@@ -55,6 +55,7 @@ const wss = new WebSocket.Server({ server });
 /**
  * @name ws
  * @property {string}  ws.id                  - The client's socket id
+ * @property {number}  ws.health              - The client's health points
  * @property {object}  ws.playerData          - The client's player data for rendering
  * @property {number}  ws.playerData.x        - The client's x camera position in the scene
  * @property {number}  ws.playerData.y        - The client's y camera position in the scene
@@ -67,6 +68,8 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', (ws) => {
 
     ws.id = wss.generateID();
+
+    ws.health = 100;
 
     ws.playerData = {
         'x':0,
@@ -92,7 +95,7 @@ wss.on('connection', (ws) => {
 
         if (message[0] === 0) {
 
-            Logger.game(`Recieved ping from client "${ws.id}"`);
+            // Logger.game(`Recieved ping from client "${ws.id}"`);
             ws.send(new Uint8Array([0]).buffer);
 
         } else if (message[0] === 1) {
@@ -102,13 +105,13 @@ wss.on('connection', (ws) => {
 
         } else if (message[0] === 2) {
 
-            Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
+            // Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
             ws.playerData = message.slice(1);
             wss.broadcast({'message':ws.playerData,'client':ws.id}, 4)
 
         } else if (message[0] === 3) {
 
-            Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
+            Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
             let authcode = decodeClient(message.slice(1,5));
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
@@ -124,6 +127,9 @@ wss.on('connection', (ws) => {
                 Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);
             }
 
+        } else if (message[0] === 4) {
+            Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
+            wss.broadcast({'message':[ws.health, message.slice(9)],'client':Array.from(message.slice(1,9))}, 6);
         }
 
     });
@@ -188,6 +194,11 @@ wss.broadcast = function broadcast(msg, type) {
             byteData.push(encodeClient(msg[i].client));
             byteData.push(msg[i].team);
         }
+
+    } else if (type === 6) {
+        
+        byteData.push(msg.client);
+        byteData.push(msg.message);
 
     } else {
 
@@ -363,7 +374,7 @@ app.post('/shell/sudo', async function(req, res) {
 app.post('/shell/mysql', async function(req, res) {
     if (req.session.isAdmin || process.env.NODE_ENV === 'development') {
         if (req.body.command) {
-            Logger.error(`Executed SQL: ${req.body.command}`);
+            Logger.mysql(`Executed SQL: ${req.body.command}`);
             connection.query(req.body.command, function(error, results, fields) {
                 if (error) res.json(error);
                 res.json(results);

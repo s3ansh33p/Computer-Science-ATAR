@@ -41,7 +41,7 @@ function sendData(data) {
      * @constant
      * @type {string[]}
      */
-    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH" ];
+    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH", "DAMAGE" ];
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
@@ -73,8 +73,15 @@ function sendData(data) {
         ]);
 
     } else if (byteData[0] === 3) {
+
         byteData.push(encodeHex(data.data.code.toString()));
         byteData.push(data.data.userid);
+
+    } else if (byteData[0] === 4) {
+
+        byteData.push(encodeHex(data.data.clientID));
+        byteData.push(1); // Mesh Name -> 1 headshot
+
     }
 
     // Finally, send the data to the server
@@ -261,6 +268,28 @@ server.onmessage = function (event) {
                 }
 
             }
+            break;
+
+        case 6:
+
+            console.log(Uint8View);
+            const decodedClient = decodeClient( Uint8View.slice(1,9) );
+
+            if (decodedClient === clientID) {
+
+                globalHandler.playerData.health -= 20;
+                console.log(globalHandler.playerData.health)
+
+                if (globalHandler.playerData.health < 1) {
+
+                    globalHandler.playerData.health = 0
+
+                    alert('You have been killed');
+
+                }
+
+            }
+
             break;
 
         default:
