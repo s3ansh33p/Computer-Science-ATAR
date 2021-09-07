@@ -53,6 +53,24 @@ manager.onProgress = function ( item, loaded, total ) {
     }
 };
 
+const weaponData = [
+    {
+        'name': 'AK-47',
+        'damage': {
+            'head': 143,
+            'chest': 44,
+            'legs': 26
+        }, 
+        'price': 2700,
+        'reward': 300,
+        'penetration': 77.5,
+        'rounds': { // 30/90 starting
+            'max': 30,
+            'extramags': 3
+        }
+    }
+]
+
 const playerPrecision = 100;
 
 const clock = new THREE.Clock();
@@ -541,7 +559,7 @@ function transferData() {
             text.rotation.set(0, THREE.Math.degToRad(180+camRotation), 0);
         }
 
-        document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
+        // document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
         sendData({
             'data':{
                 'x':playerData.position.x || 0,

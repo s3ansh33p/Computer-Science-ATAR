@@ -288,6 +288,8 @@ server.onmessage = function (event) {
 
                 }
 
+                document.getElementById("health-stat").innerText = globalHandler.playerData.health;
+
             }
 
             break;
@@ -351,6 +353,7 @@ server.onopen = function () {
 
 let gameTime = 600;
 let gameTimers;
+
 
 /**
  * Join a game
@@ -716,6 +719,27 @@ function lockChangeAlert() {
         locked = false;
     }
   }
+}
+
+/**
+ * Renders a message in the kill feed
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {Object} data JSON object that contains the event
+ * @returns {void}
+ * @version 1.0
+ * @example
+ * sendFeed({
+ *  'attacker': 'clientID',
+ *  'victim': 'clientID,
+ *  'eventType': 'AK-47'
+ * })
+ */
+function sendFeed(data = {}) {
+    document.getElementById('feed-container').innerHTML += `<div class="d-flex align-items-center">
+    <p class="mb-0 text-warning">dinrah</p>
+    <img src="./assets/feed/ak-47.svg" class="mx-2" style="width: 40px">
+    <p class="mb-0 text-info">MartyMcKnife</p>
+</div>`;
 }
 
 /**

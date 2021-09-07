@@ -207,16 +207,24 @@
     </div>
 </div>
 
-<div id="info"><div>v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div></div>
+<!-- <div id="info"><div>v0.0.1 Debug Mode<br />WASD to move, space to jump, use mouse to throw balls and move the camera.<br><span id="debug">Loading...</span></div></div> -->
 
 <div id="chat">
     <div id="chat-msg-container"></div>
     <input id="chat-input" placeholder="Chat" type="text" class="input" name="message">
 </div>
 
+<div id="feed-container"></div>
+
 <div id="health-container">
-    <h3 id="health-stat">+ 100</h3>
-    <h3 id="armour-stat" class="ms-4">X 100</h3>
+    <div class="d-flex align-items-center">
+        <img src="./assets/plus.svg" style="width: 40px">
+        <h3 id="health-stat" class="mb-0 ms-1">100</h3>
+    </div>
+    <div class="d-flex align-items-center ms-4">
+        <img src="./assets/armor.svg" style="width: 28px">
+        <h3 id="armour-stat" class="mb-0 ms-2">100</h3>
+    </div>
 </div>
 
 <div id="weapon-container" class="d-flex flex-column align-items-end justify-content-end">

@@ -237,6 +237,15 @@ body.center {
         overscroll-behavior: none;
     }
 
+    #feed-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 8px;
+        display: flex;
+        background: rgba(0,0,0,0.7);
+    }
+
     #settings {
 
         &.hidden {
