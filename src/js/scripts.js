@@ -369,18 +369,20 @@ function joinGame() {
     // Temporarily set tab mode info
     setTabMode(0, "Deathmatch") // Mode
     setTabMode(1, "Dust II") // Map
-    gameTimers = setInterval(() => {
-        updateGameTimers();
-    }, 1000); // Timer
+    if (!gameTimers) {
+        gameTimers = setInterval(() => {
+            updateGameTimers();
+        }, 1000); // Timer
 
-    setTimeout(() => {
-        inGame = true;
-        globalHandler.animate();
-    }, 400);
+        setTimeout(() => {
+            inGame = true;
+            globalHandler.animate();
+        }, 400);
 
-    setTimeout(() => {
-        document.getElementById('loader').remove();
-    }, 2500);
+        setTimeout(() => {
+            document.getElementById('loader').remove();
+        }, 2500);
+    }
 
 }
 
@@ -525,6 +527,8 @@ function saveSettings(settings) {
 function resetSettings() {
     if (localStorage) {
         localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
+        // Todo: ender in settings menu
+        
     }
 }
 
@@ -760,5 +764,4 @@ globalHandler.getSettings = () => getSettings();
  */
 globalHandler.otherPlayers = () => {return otherPlayers};
 
-// temp 
-resetSettings();
+// resetSettings();

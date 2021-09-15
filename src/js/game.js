@@ -387,7 +387,7 @@ function controls( deltaTime ) {
 
     const speed = 30;
 
-    if ( playerOnFloor && !typing && inGame) {
+    if ( playerOnFloor && !typing && inGame && locked) {
 
         if ( keyStates[ globalHandler.getSettings().movement.forward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );
@@ -512,6 +512,25 @@ loader.load( 'scene.glb', ( gltf ) => {
     animate();
 
 } );
+
+
+// Load in settings
+let clientSettings = globalHandler.getSettings();
+let settingsCollection = [`movement-1`, `movement-2`, `movement-3`, `movement-4`, `movement-5`];
+let curProps = Object.getOwnPropertyNames(clientSettings.movement);
+for (let i=0; i<settingsCollection.length; i++) {
+    document.getElementById(`settings-${settingsCollection[i]}`).value = clientSettings.movement[curProps[i]];
+    
+    // Create listeners
+    document.getElementById(`settings-${settingsCollection[i]}`).addEventListener("keydown", (e) => {
+        e.preventDefault();
+        e.target.value = e.code;
+        let id = curProps[e.target.id.slice(e.target.id.lastIndexOf('-')+1)-1];
+        clientSettings.movement[id] = e.code;
+        saveSettings(clientSettings);
+    }); 
+}
+
 
 /**
  * Transfers data to the server and renders entities
