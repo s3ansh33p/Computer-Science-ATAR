@@ -649,6 +649,15 @@ document.getElementById('chat-input').addEventListener('focus', (e) => {
     if (!typing) typing = true;
 });
 
+function dropSettings(elem) {
+    if (elem.parentElement.parentElement.children[0].id === 'settings-mouse-1') {
+        elem.parentElement.parentElement.children[0].innerText = elem.innerText;
+        let clientSettings = globalHandler.getSettings();
+        clientSettings.mouse.invert = (elem.innerText === 'Yes') ? true : false;
+        saveSettings(clientSettings);
+    }
+}
+
 const defaultSettings = {
     "movement": {
         "forward": "KeyW",
@@ -656,6 +665,13 @@ const defaultSettings = {
         "right": "KeyD",
         "backward": "KeyS",
         "jump": "Space"
+    },
+    "mouse": {
+        "sensitivity": 25,
+        "invert": false
+    },
+    "game": {
+        "reload": "KeyR"
     },
     "test": {
         "key": "KeyX",
@@ -764,4 +780,4 @@ globalHandler.getSettings = () => getSettings();
  */
 globalHandler.otherPlayers = () => {return otherPlayers};
 
-// resetSettings();
+resetSettings();

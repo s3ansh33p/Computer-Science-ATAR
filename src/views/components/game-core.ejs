@@ -41,8 +41,8 @@
                                       Yes
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="settings-mouse-1">
-                                      <li class="dropdown-item cursor-pointer">Yes</li>
-                                      <li class="dropdown-item cursor-pointer">No</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
                                     </ul>
                                   </div>
                             </div>
@@ -242,27 +242,19 @@
     <div id="weapon-primary">
         <h3>Rifle</h3>
     </div>
-    <div id="weapon-secondary">
-        <h3>Pistol</h3>
-    </div>
-    <div id="weapon-knife">
-        <h3>Knife</h3>
-    </div>
-    <div id="weapon-grenades">
-        <h3>Grenades</h3>
-    </div>
-    <div id="weapon-bomb">
-        <h3>Bomb</h3>
-    </div>
-    <span class="d-flex align-items-end justify-content-end">
-        <h3>20</h3>
-        <h5>/120</h5>
+    <span class="d-flex align-items-end justify-content-end" id="weapon-ammo">
+        <h3>0</h3>
+        <h5>/0</h5>
     </span>
 </div>
 
 <div id="scene-transition"></div>
 <div id="game-alert"></div>
-
+<div id="crosshair" class="d-flex justify-content-center align-items-center">
+    <div class="position-relative"></div>
+    <div class="position-absolute" style="background: red; width: 100px; height: 10px;"></div>
+    <div class="position-absolute" style="background: red; width: 10px; height: 100px;"></div>
+</div>
 <div id="container"></div>
 <div class="tab-container" style="display: none;">
     <div class="tab-scores">

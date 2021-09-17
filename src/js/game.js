@@ -170,8 +170,10 @@ document.body.addEventListener( 'mousemove', ( event ) => {
 
     if ( document.pointerLockElement === document.body && inGame && !typing) {
 
-        camera.rotation.y -= event.movementX / 500;
-        camera.rotation.x -= event.movementY / 500;
+        let mouseProps = globalHandler.getSettings().mouse;
+
+        camera.rotation.y -= (event.movementX / ((101-mouseProps.sensitivity)*10))*(mouseProps.invert ? -1 : 1);
+        camera.rotation.x -= (event.movementY / ((101-mouseProps.sensitivity)*10))*(mouseProps.invert ? -1 : 1);
 
     }
 
@@ -188,6 +190,34 @@ function onWindowResize() {
 
 }
 
+let ammo = 20;
+let mag = 60;
+
+// preload ammo in UI
+document.getElementById('weapon-ammo').children[0].innerText = ammo;
+document.getElementById('weapon-ammo').children[1].innerText = "/"+mag;
+
+function updateAmmo() {
+    if (ammo !== 0) {
+        ammo--;
+        let ammoContainer = document.getElementById('weapon-ammo').children;
+        if (ammoContainer[0].innerText !== "0") {
+            ammoContainer[0].innerText = ammo
+        }
+    }
+}
+
+function reloadAmmo() {
+    if (mag !== 0) {
+        let ammoContainer = document.getElementById('weapon-ammo').children;
+        mag = mag - 20 + ammo;
+        if (mag < 0) mag = 0;
+        ammo = 20;
+        ammoContainer[0].innerText = ammo;            
+        ammoContainer[1].innerText = "/" + mag;  
+    }
+}
+
 function pointerCheck(e) {
     for (let i=0; i<e.path.length; i++) {
         if (e.path[i].id === "gameMenu-0") return false; // Return to game option
@@ -200,7 +230,7 @@ let arrowHelpers = [];
 
 document.addEventListener( 'click', (e) => {
 
-    if (inGame && !typing && !pointerCheck(e)) {
+    if (inGame && !typing && !pointerCheck(e) && ammo !== 0) {
 
         camera.getWorldDirection( playerDirection );
 
@@ -208,7 +238,7 @@ document.addEventListener( 'click', (e) => {
 
         raycaster.setFromCamera( mouse, camera );   
         raycaster.ray.direction.set(raycaster.ray.direction.x, raycaster.ray.direction.y - 0.85); // Wierd bug to sort out.
-        console.log(raycaster);
+        updateAmmo();
 
         let intersects = raycaster.intersectObjects( scene.children, true );
 
@@ -385,9 +415,9 @@ function getSideVector() {
  */
 function controls( deltaTime ) {
 
-    const speed = 30;
+    const speed = (playerOnFloor) ? 20 : 2;
 
-    if ( playerOnFloor && !typing && inGame && locked) {
+    if ( !typing && inGame && locked) {
 
         if ( keyStates[ globalHandler.getSettings().movement.forward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );
@@ -405,8 +435,8 @@ function controls( deltaTime ) {
             playerVelocity.add( getSideVector().multiplyScalar( speed * deltaTime ) );
         }
 
-        if ( keyStates[ globalHandler.getSettings().movement.jump ] ) {
-            playerVelocity.y = 11;
+        if ( playerOnFloor && keyStates[ globalHandler.getSettings().movement.jump ] ) {
+            playerVelocity.y = 9;
         }
 
     }
@@ -475,7 +505,7 @@ function loadText() {
     } );
 }
 
-loadText();
+// loadText();
 
 loader.load( 'scene.glb', ( gltf ) => {
 
@@ -516,21 +546,36 @@ loader.load( 'scene.glb', ( gltf ) => {
 
 // Load in settings
 let clientSettings = globalHandler.getSettings();
-let settingsCollection = [`movement-1`, `movement-2`, `movement-3`, `movement-4`, `movement-5`];
+
+// Movement
 let curProps = Object.getOwnPropertyNames(clientSettings.movement);
-for (let i=0; i<settingsCollection.length; i++) {
-    document.getElementById(`settings-${settingsCollection[i]}`).value = clientSettings.movement[curProps[i]];
+for (let i=0; i<curProps.length; i++) {
+    document.getElementById(`settings-movement-${i+1}`).value = clientSettings.movement[curProps[i]];
     
     // Create listeners
-    document.getElementById(`settings-${settingsCollection[i]}`).addEventListener("keydown", (e) => {
+    document.getElementById(`settings-movement-${i+1}`).addEventListener("keydown", (e) => {
+        curProps = Object.getOwnPropertyNames(clientSettings.movement);
         e.preventDefault();
         e.target.value = e.code;
         let id = curProps[e.target.id.slice(e.target.id.lastIndexOf('-')+1)-1];
         clientSettings.movement[id] = e.code;
+        console.log(clientSettings)
         saveSettings(clientSettings);
     }); 
 }
-
+// Mouse
+curProps = Object.getOwnPropertyNames(clientSettings.mouse);
+// Invert Mouse
+document.getElementById(`settings-mouse-1`).innerText = (clientSettings.mouse[curProps[1]]) ? 'Yes' : 'No' ;
+// Mouse Sensitivty
+document.getElementById(`settings-mouse-2`).value = (clientSettings.mouse[curProps[0]]);
+    
+// Create listeners for Mouse Sensitivity
+document.getElementById(`settings-mouse-2`).addEventListener("change", (e) => {
+    e.preventDefault();
+    clientSettings.mouse.sensitivity = e.target.value;
+    saveSettings(clientSettings);
+}); 
 
 /**
  * Transfers data to the server and renders entities
@@ -750,6 +795,16 @@ globalHandler.gameEndScreen = () => {
         scene.remove.apply(scene, scene.children); // Remove the main scene
     }, 1500);
 }
+
+/**
+ * A function in globalHandler (globalHandler.reload) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.reload = () => reloadAmmo();
+addKeyBind(() => {globalHandler.reload()}, globalHandler.getSettings().game.reload);
 
 // Testing functions
 globalHandler.wireframe = (enabled) => enableWireframe(enabled);
