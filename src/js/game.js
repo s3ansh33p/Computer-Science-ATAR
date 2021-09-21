@@ -190,8 +190,9 @@ function onWindowResize() {
 
 }
 
-let ammo = 20;
-let mag = 60;
+// The default weapon should be an AK
+let ammo = weaponData[0].rounds.max;
+let mag = weaponData[0].rounds.max * weaponData[0].rounds.extramags;
 
 // preload ammo in UI
 document.getElementById('weapon-ammo').children[0].innerText = ammo;
@@ -210,9 +211,9 @@ function updateAmmo() {
 function reloadAmmo() {
     if (mag !== 0) {
         let ammoContainer = document.getElementById('weapon-ammo').children;
-        mag = mag - 20 + ammo;
+        mag = mag - weaponData[0].rounds.max + ammo;
         if (mag < 0) mag = 0;
-        ammo = 20;
+        ammo = weaponData[0].rounds.max;
         ammoContainer[0].innerText = ammo;            
         ammoContainer[1].innerText = "/" + mag;  
     }

@@ -250,10 +250,18 @@
 
 <div id="scene-transition"></div>
 <div id="game-alert"></div>
-<div id="crosshair" class="d-flex justify-content-center align-items-center">
-    <div class="position-relative"></div>
-    <div class="position-absolute" style="background: red; width: 100px; height: 10px;"></div>
-    <div class="position-absolute" style="background: red; width: 10px; height: 100px;"></div>
+<div id="crosshair" class="d-flex justify-content-center align-items-center" style="--crosshair: white;">
+    <div class="position-absolute d-flex" style="width: 100px; height: 10px;">
+        <div class="w-50 h-100" style="background: var(--crosshair); transform: translateX(-20px);"></div>
+        <div class="w-50 h-100" style="background: var(--crosshair); transform: translateX(20px);"></div>
+    </div>
+    <div class="position-absolute d-flex flex-column" style="width: 10px; height: 100px;">
+        <div class="w-100 h-50" style="background: var(--crosshair); transform: translateY(-20px);"></div>
+        <div class="w-100 h-50" style="background: var(--crosshair); transform: translateY(20px);"></div>
+    </div>
+    <div class="position-absolute d-flex flex-column" style="width: 10px; height: 10px;">
+        <div class="w-100 h-100" style="background: var(--crosshair);"></div>
+    </div>
 </div>
 <div id="container"></div>
 <div class="tab-container" style="display: none;">

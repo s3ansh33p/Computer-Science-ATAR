@@ -11,13 +11,13 @@ const Logger = require('./Logger');
 
 const app = express();
 const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:3000' : 'https://dev.seanmcginty.space';
-const connection = mysql.createConnection({
-	host     : process.env.MYSQL_HOST || 'localhost',
-	user     : process.env.MYSQL_USERNAME || 'root',
-	password : process.env.MYSQL_PASSWORD || '',
-	database : process.env.MYSQL_DATABASE || 'csc',
-    port: process.env.MYSQL_PORT || 3306
-});
+// const connection = mysql.createConnection({
+// 	host     : process.env.MYSQL_HOST || 'localhost',
+// 	user     : process.env.MYSQL_USERNAME || 'root',
+// 	password : process.env.MYSQL_PASSWORD || '',
+// 	database : process.env.MYSQL_DATABASE || 'csc',
+//     port: process.env.MYSQL_PORT || 3306
+// });
 
 /**
  * Port for the express server to serve content on
@@ -116,12 +116,13 @@ wss.on('connection', (ws) => {
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
                 
-                connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
-                    if (error) throw error;
-                    if (results.length > 0) {
-                        ws.userData.username = results[0].username;
-                    }
-                });
+                // connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
+                //     if (error) throw error;
+                //     if (results.length > 0) {
+                //         ws.userData.username = results[0].username;
+                //     }
+                // });
+                ws.userData.username = 'TMP';
 
             } else {
                 Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);

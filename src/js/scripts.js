@@ -692,6 +692,27 @@ function test() {
     console.log('Binded Key')
 }
 
+function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') {
+    let crosshair = document.getElementById('crosshair');
+    // Color
+    crosshair.style.setProperty('--crosshair', color);
+    // X Axis
+    crosshair.children[0].style.width = `${length}px`;
+    crosshair.children[0].style.height = `${width}px`;
+    crosshair.children[0].children[0].style.transform = `translateX(-${offset}px)`;
+    crosshair.children[0].children[1].style.transform = `translateX(${offset}px)`;
+    // Y Axis
+    crosshair.children[1].style.width = `${width}px`;
+    crosshair.children[1].style.height = `${length}px`;
+    crosshair.children[1].children[0].style.transform = `translateY(-${offset}px)`;
+    crosshair.children[1].children[1].style.transform = `translateY(${offset}px)`;
+    // Center
+    crosshair.children[2].style.width = `${width}px`;
+    crosshair.children[2].style.height = `${width}px`;
+}
+
+renderCrosshair();
+
 let wireframeOn = false;
 let statsOn = false;
 // Map binds
