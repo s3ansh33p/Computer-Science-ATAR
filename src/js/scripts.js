@@ -216,23 +216,53 @@ server.onmessage = function (event) {
 
             otherPlayers = []; // Defined in game.js
 
+            document.getElementsByClassName('tab-players')[0].innerHTML = '';
+            document.getElementsByClassName('tab-players')[1].innerHTML = '';
+
+            // T , CT
+            let totalTeams = [0,0];
+            
             for (let i = 0; i < Uint8View[1]; i++) {
-
+                
                 const decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
-
+                
+                const team = (Uint8View.slice(10+i*9,11+i*9)[0] === 0 ? 'T' : 'CT');
+                totalTeams[(team === "T") ? 0 : 1]++;
                 if ( decodedClient !== clientID) {
+
+                    console.log()
 
                     otherPlayers.push({ 
                         'x':0,
                         'y':0,
                         'z':0,
                         'rotation': 0,
-                        'client': decodedClient
+                        'client': decodedClient,
+                        'team': team
                     })
-
+                } else {
+                    setTimeout(() => {
+                        globalHandler.playerData.team = team;
+                    }, 100);
                 }
-
+                const innerHMTL = `	<tr id="client-${decodedClient}">
+                <td>47</td>
+                <td>
+                    <img src="./assets/author.png">
+                    <img src="./assets/author.png">
+                    <span id="client-${decodedClient}-id">s3ansh33p</span> ${(decodedClient === clientID) ? '(you)' : ''}
+                </td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr class="spacer"></tr>`;
+            document.getElementsByClassName('tab-players')[(team === "T") ? 1 : 0].innerHTML += innerHMTL;
             }
+            // Todo render this into the teams tab UI
+            console.log(totalTeams)
+
             break;
 
         case 3:

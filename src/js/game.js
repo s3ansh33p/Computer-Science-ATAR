@@ -31,23 +31,6 @@ manager.onProgress = function ( item, loaded, total ) {
     if (loaded === total) {
         setTimeout(() => {
             document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
-                for (let i=0; i<5; i++) {
-                    const innerHMTL = `	<tr>
-                    <td>47</td>
-                    <td>
-                        <img src="./assets/author.png">
-                        <img src="./assets/author.png">
-                        s3ansh33p
-                    </td>
-                    <td>12</td>
-                    <td>7</td>
-                    <td>3</td>
-                    <td>27</td>
-                </tr>
-                <tr class="spacer"></tr>`;
-                document.getElementsByClassName('tab-players')[0].innerHTML += innerHMTL;
-                document.getElementsByClassName('tab-players')[1].innerHTML += innerHMTL;
-                }
             },300)
         }
     }

@@ -10,7 +10,7 @@ const { exec } = require("child_process");
 const Logger = require('./Logger');
 
 const app = express();
-const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:3000' : 'https://dev.seanmcginty.space';
+const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:4000' : 'https://dev.seanmcginty.space';
 // const connection = mysql.createConnection({
 // 	host     : process.env.MYSQL_HOST || 'localhost',
 // 	user     : process.env.MYSQL_USERNAME || 'root',
