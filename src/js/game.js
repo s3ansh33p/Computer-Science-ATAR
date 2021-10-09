@@ -218,10 +218,8 @@ document.addEventListener( 'click', (e) => {
 
         camera.getWorldDirection( playerDirection );
 
-        let mouse = { x : ( e.clientX / window.innerWidth ) * 2 - 1, y : ( e.clientY / window.innerHeight ) * 2 + 1 };
-
-        raycaster.setFromCamera( mouse, camera );   
-        raycaster.ray.direction.set(raycaster.ray.direction.x, raycaster.ray.direction.y - 0.85); // Wierd bug to sort out.
+        raycaster.setFromCamera( {x:0, y:0}, camera );   
+        raycaster.ray.direction.set(raycaster.ray.direction.x, raycaster.ray.direction.y); // Wierd bug to sort out.
         updateAmmo();
 
         let intersects = raycaster.intersectObjects( scene.children, true );
@@ -242,20 +240,22 @@ document.addEventListener( 'click', (e) => {
                 // Compare points with otherPlayers
                 // Check for hits
                 // console.log("PlayerModelID: ", intersects[i].object.parent.parent.id)
-                console.log("Collision with Player Mesh: ", intersects[i].point); 
                 const otherPlayerID = playerModels.map(e => e.id).indexOf(intersects[i].object.parent.parent.id);
                 if (otherPlayerID !== -1) {
-                    // console.log(otherPlayerID);
-                    // console.log(globalHandler.otherPlayers())
-                    console.log(globalHandler.otherPlayers()[otherPlayerID].client);
-                    sendData({
-                        'data': {
-                            'clientID': globalHandler.otherPlayers()[otherPlayerID].client
-                        },
-                        'type': 'damage'
-                    })
+                    if (globalHandler.otherPlayers()[otherPlayerID] !== undefined) {
+                        globalHandler.log("Collision with Player Mesh: " + JSON.stringify(intersects[i].point), "Damage"); 
+                        globalHandler.log(globalHandler.otherPlayers()[otherPlayerID].client, "Damage");
+                        sendData({
+                            'data': {
+                                'clientID': globalHandler.otherPlayers()[otherPlayerID].client
+                            },
+                            'type': 'damage'
+                        })
+                    } else {
+                        globalHandler.log("Invalid playerID", "Damage")
+                    }
                 } else {
-                    console.log("Invalid modelID");
+                    globalHandler.log("Invalid modelID", "Damage");
                 }
             } else {
                 arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));

@@ -10,14 +10,15 @@ const { exec } = require("child_process");
 const Logger = require('./Logger');
 
 const app = express();
-const runtime = (process.env.NODE_ENV === 'development') ? 'http://localhost:4000' : 'https://dev.seanmcginty.space';
-// const connection = mysql.createConnection({
-// 	host     : process.env.MYSQL_HOST || 'localhost',
-// 	user     : process.env.MYSQL_USERNAME || 'root',
-// 	password : process.env.MYSQL_PASSWORD || '',
-// 	database : process.env.MYSQL_DATABASE || 'csc',
-//     port: process.env.MYSQL_PORT || 3306
-// });
+const connection = mysql.createConnection({
+	host     : process.env.MYSQL_HOST || 'localhost',
+	user     : process.env.MYSQL_USERNAME || 'root',
+	password : process.env.MYSQL_PASSWORD || '',
+	database : process.env.MYSQL_DATABASE || 'csc',
+    port: process.env.MYSQL_PORT || 3306
+});
+
+console.log(connection)
 
 /**
  * Port for the express server to serve content on
@@ -32,6 +33,12 @@ const port = process.env.EXPRESS_PORT || 3000;
  * @see https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 */
 const wsport = process.env.WS_PORT || 8999;
+
+/**
+ * URL prefix for requests
+ * @constant {string} runtime Determines the correct URL for requests to be sent to
+ */
+const runtime = (process.env.NODE_ENV === 'development') ? 'http://192.168.1.39:'+port : 'https://dev.seanmcginty.space';
 
 // Routing for static files such as the css styling and three.js files
 app.use(express.static(__dirname + '/public'));
@@ -95,7 +102,7 @@ wss.on('connection', (ws) => {
 
         if (message[0] === 0) {
 
-            // Logger.game(`Recieved ping from client "${ws.id}"`);
+            Logger.game(`Recieved ping from client "${ws.id}"`);
             ws.send(new Uint8Array([0]).buffer);
 
         } else if (message[0] === 1) {
@@ -131,6 +138,10 @@ wss.on('connection', (ws) => {
         } else if (message[0] === 4) {
             Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
             wss.broadcast({'message':[ws.health, message.slice(9)],'client':Array.from(message.slice(1,9))}, 6);
+        // Will need to add the ability to kick players. on 5
+        } else if (message[0] === 6) {
+            Logger.game(`Recieved ms from client "${ws.id}" | ${message.slice(1)}`)
+            wss.broadcast({'message':message.slice(1),'client':ws.id}, 7);
         }
 
     });
@@ -496,6 +507,7 @@ app.post('/auth-register', function(req, res) {
     const password = req.body.password;
 	if (username && email && password) {
 		connection.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], function(error, results, fields) {
+            if (error) throw error;
             if (results.length > 0) {
 				req.session.accountexists = true;
 				res.redirect('/register');

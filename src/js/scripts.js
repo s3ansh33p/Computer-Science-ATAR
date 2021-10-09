@@ -41,7 +41,7 @@ function sendData(data) {
      * @constant
      * @type {string[]}
      */
-    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH", "DAMAGE" ];
+    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH", "DAMAGE", "MS" ];
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
@@ -81,6 +81,10 @@ function sendData(data) {
 
         byteData.push(encodeHex(data.data.clientID));
         byteData.push(1); // Mesh Name -> 1 headshot
+
+    } else if (byteData[0] === 5) {
+
+        byteData.push(encodeHex(data.data.ms));
 
     }
 
@@ -202,6 +206,8 @@ server.onmessage = function (event) {
 
             const conMS = Math.round(timerEnd('connectionMS'));
             document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
+            console.log(`Connected to server in ${conMS}ms`)
+
 
             sendData({
                 'data': {
@@ -209,7 +215,15 @@ server.onmessage = function (event) {
                          'userid': userid // Defined in game.ejs from session
                 },
                 'type': 'auth'
-               })
+            })
+
+            sendData({
+                'data': {
+                         'ms': conMS.toString(),
+                },
+                'type': 'ms'
+            })
+
             break;
 
         case 2:
@@ -230,8 +244,6 @@ server.onmessage = function (event) {
                 totalTeams[(team === "T") ? 0 : 1]++;
                 if ( decodedClient !== clientID) {
 
-                    console.log()
-
                     otherPlayers.push({ 
                         'x':0,
                         'y':0,
@@ -243,7 +255,7 @@ server.onmessage = function (event) {
                 } else {
                     setTimeout(() => {
                         globalHandler.playerData.team = team;
-                    }, 100);
+                    }, 500);
                 }
                 const innerHMTL = `	<tr id="client-${decodedClient}">
                 <td>47</td>
@@ -260,8 +272,9 @@ server.onmessage = function (event) {
             <tr class="spacer"></tr>`;
             document.getElementsByClassName('tab-players')[(team === "T") ? 1 : 0].innerHTML += innerHMTL;
             }
-            // Todo render this into the teams tab UI
-            console.log(totalTeams)
+            // console.log(totalTeams)
+            document.getElementsByClassName('tb-1')[0].children[2].innerText = `Alive: ${totalTeams[1]}/${totalTeams[1]}`;
+            document.getElementsByClassName('tb-1')[1].children[2].innerText = `Alive: ${totalTeams[0]}/${totalTeams[0]}`;
 
             break;
 
@@ -302,13 +315,13 @@ server.onmessage = function (event) {
 
         case 6:
 
-            console.log(Uint8View);
+            globalHandler.log(Uint8View);
             const decodedClient = decodeClient( Uint8View.slice(1,9) );
 
             if (decodedClient === clientID) {
 
                 globalHandler.playerData.health -= 20;
-                console.log(globalHandler.playerData.health)
+                globalHandler.log(globalHandler.playerData.health)
 
                 if (globalHandler.playerData.health < 1) {
 
@@ -322,6 +335,16 @@ server.onmessage = function (event) {
 
             }
 
+            break;
+
+        case 7:
+
+            globalHandler.log(Uint8View);
+            const decodedClientID = decodeClient( Uint8View.slice(1,9) );
+
+            console.log(decodedClientID);
+            console.log(Uint8View.slice(9,Uint8View.length))
+          
             break;
 
         default:
@@ -719,7 +742,7 @@ const defaultSettings = {
 }
 
 function test() {
-    console.log('Binded Key')
+    globalHandler.log('Binded Key')
 }
 
 function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') {
