@@ -38,7 +38,7 @@ const wsport = process.env.WS_PORT || 8999;
  * URL prefix for requests
  * @constant {string} runtime Determines the correct URL for requests to be sent to
  */
-const runtime = (process.env.NODE_ENV === 'development') ? 'http://192.168.1.39:'+port : 'https://dev.seanmcginty.space';
+const runtime = (process.env.NODE_ENV === 'development') ? 'http://127.0.0.1:'+port : 'https://dev.seanmcginty.space';
 
 // Routing for static files such as the css styling and three.js files
 app.use(express.static(__dirname + '/public'));
@@ -102,12 +102,12 @@ wss.on('connection', (ws) => {
 
         if (message[0] === 0) {
 
-            Logger.game(`Recieved ping from client "${ws.id}"`);
+            // Logger.game(`Recieved ping from client "${ws.id}"`);
             ws.send(new Uint8Array([0]).buffer);
 
         } else if (message[0] === 1) {
 
-            Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
+            // Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
             wss.broadcast({'message':message.slice(1,201),'client':ws.id}, 3)
 
         } else if (message[0] === 2) {
@@ -118,7 +118,7 @@ wss.on('connection', (ws) => {
 
         } else if (message[0] === 3) {
 
-            Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
+            // Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
             let authcode = decodeClient(message.slice(1,5));
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
@@ -136,7 +136,7 @@ wss.on('connection', (ws) => {
             }
 
         } else if (message[0] === 4) {
-            Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
+            // Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
             wss.broadcast({'message':[ws.health, message.slice(9)],'client':Array.from(message.slice(1,9))}, 6);
         // Will need to add the ability to kick players. on 5
         } else if (message[0] === 6) {

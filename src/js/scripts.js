@@ -206,8 +206,7 @@ server.onmessage = function (event) {
 
             const conMS = Math.round(timerEnd('connectionMS'));
             document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
-            console.log(`Connected to server in ${conMS}ms`)
-
+            console.log(`%c[Network]%c Connected to server in ${conMS}ms`,"color: #fff000;","");
 
             sendData({
                 'data': {
@@ -253,9 +252,52 @@ server.onmessage = function (event) {
                         'team': team
                     })
                 } else {
-                    setTimeout(() => {
+                    function loaded() {
                         globalHandler.playerData.team = team;
-                    }, 500);
+                        globalHandler.log('All critical data loaded successfully');
+                        let curSettings = globalHandler.getSettings();
+                        if (curSettings.rendering.frameLimit < 30) globalHandler.log(`Low frame limit can lead to collision issues. Found value ${curSettings.rendering.frameLimit}`, "System")
+                        if (curSettings.rendering.fxaa) {
+                            globalHandler.log(`Enabling FXAA can lead to poor performance on weak hardware.`, "System")
+                            if (curSettings.rendering.sampling > 3) globalHandler.log(`Setting FXAA sampling above 3 hugely impacts performance. Found value ${curSettings.rendering.sampling}`, "System")
+                        }
+                        let raw = 'Client Settings\n';
+                        let props = Object.getOwnPropertyNames(curSettings);
+                        for (let i=0; i<props.length; i++) {
+                            raw += `${props[i].toUpperCase()}\n`;
+                            let subProps = Object.getOwnPropertyNames(curSettings[props[i]]);
+                            for (let j=0;j<subProps.length; j++) {
+                                if (typeof curSettings[props[i]][subProps[j]] == "object") {
+                                    raw += `  ${subProps[j]}:\n`;
+                                    let subSubProps = Object.getOwnPropertyNames(curSettings[props[i]][subProps[j]]);
+                                    for (let k=0; k<subSubProps.length; k++) {
+                                        raw += `     ${subSubProps[k]}: ${curSettings[props[i]][subProps[j]][subSubProps[k]]}\n`;
+                                    }
+                                } else {
+                                    raw += `  ${subProps[j]}: ${curSettings[props[i]][subProps[j]]}\n`;
+                                }
+                            }
+                        }
+                        globalHandler.log(raw);
+                    }
+                    if (globalHandler.playerData === undefined) {
+                        let callbackCount = 0;
+                        let callback = setInterval(() => {
+                            callbackCount++;
+                            if (callbackCount > 100) {
+                                clearInterval(callback);
+                                console.log(`%c[CRITICAL ERROR]%c TIMED OUT`,"color: #ff0000;","");
+                                return;
+                            }
+                            console.log(`%c[System]%c Waiting for all critical checks x${callbackCount}`,"color: #fff000;","");
+                            if (globalHandler.playerData !== undefined) {
+                                clearInterval(callback)
+                                loaded();
+                            }
+                        }, 100);
+                    } else {
+                        loaded();
+                    }
                 }
                 const innerHMTL = `	<tr id="client-${decodedClient}">
                 <td>47</td>
@@ -723,8 +765,23 @@ const defaultSettings = {
         "sensitivity": 25,
         "invert": false
     },
+    "crosshair": {
+        "offset": 15,
+        "cLength": 50,
+        "cWidth": 5,
+        "colour": 'yellow'
+    },
     "game": {
         "reload": "KeyR"
+    },
+    "rendering": {  
+        "frameLimit": 60,
+        "arrowHelpers": false,
+        "shaders": true,
+        "fxaa": true,
+        "ssaa": false,
+        "luminosity": true,
+        "sampling": 1
     },
     "test": {
         "key": "KeyX",
@@ -746,22 +803,27 @@ function test() {
 }
 
 function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') {
+    function render() {
+        // Color
+        crosshair.style.setProperty('--crosshair', color);
+        // X Axis
+        crosshair.children[0].style.width = `${length}px`;
+        crosshair.children[0].style.height = `${width}px`;
+        crosshair.children[0].children[0].style.transform = `translateX(-${offset}px)`;
+        crosshair.children[0].children[1].style.transform = `translateX(${offset}px)`;
+        // Y Axis
+        crosshair.children[1].style.width = `${width}px`;
+        crosshair.children[1].style.height = `${length}px`;
+        crosshair.children[1].children[0].style.transform = `translateY(-${offset}px)`;
+        crosshair.children[1].children[1].style.transform = `translateY(${offset}px)`;
+        // Center
+        crosshair.children[2].style.width = `${width}px`;
+        crosshair.children[2].style.height = `${width}px`;
+    }
     let crosshair = document.getElementById('crosshair');
-    // Color
-    crosshair.style.setProperty('--crosshair', color);
-    // X Axis
-    crosshair.children[0].style.width = `${length}px`;
-    crosshair.children[0].style.height = `${width}px`;
-    crosshair.children[0].children[0].style.transform = `translateX(-${offset}px)`;
-    crosshair.children[0].children[1].style.transform = `translateX(${offset}px)`;
-    // Y Axis
-    crosshair.children[1].style.width = `${width}px`;
-    crosshair.children[1].style.height = `${length}px`;
-    crosshair.children[1].children[0].style.transform = `translateY(-${offset}px)`;
-    crosshair.children[1].children[1].style.transform = `translateY(${offset}px)`;
-    // Center
-    crosshair.children[2].style.width = `${width}px`;
-    crosshair.children[2].style.height = `${width}px`;
+    render()
+    crosshair = document.getElementById('settings-crosshair');
+    render()
 }
 
 renderCrosshair();
