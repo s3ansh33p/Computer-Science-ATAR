@@ -3,7 +3,13 @@ import Stats from '../examples/jsm/libs/stats.module.js';
 import { GLTFLoader } from '../examples/jsm/loaders/GLTFLoader.js';
 import { Octree } from '../examples/jsm/math/Octree.js';
 import { Capsule } from '../examples/jsm/math/Capsule.js';
-
+import { EffectComposer } from '../examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from '../examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from '../examples/jsm/postprocessing/ShaderPass.js';
+import { LuminosityShader } from '../examples/jsm/shaders/LuminosityShader.js';
+import { SSAARenderPass } from '../examples/jsm/postprocessing/SSAARenderPass.js';
+import { CopyShader } from '../examples/jsm/shaders/CopyShader.js';
+import { FXAAShader } from '../examples/jsm/shaders/FXAAShader.js';
 // Default playerData
 let playerData = {
     position: {'x':0, 'y':0, 'z':0},
@@ -13,6 +19,9 @@ let playerData = {
 
 // A manager for the loading screen
 var manager = new THREE.LoadingManager();
+
+// Load in settings
+let clientSettings = globalHandler.getSettings();
 
 /**
  * Edits the loading bar's contents
@@ -25,13 +34,12 @@ var manager = new THREE.LoadingManager();
  */
 manager.onProgress = function ( item, loaded, total ) {
     if (document.getElementsByClassName('loading-item')[0] !== undefined) {
-    document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total * 100)*1000)/1000}%`; 
-    globalHandler.log(document.getElementsByClassName('loading-item')[0].innerText, "Loader")
-    document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total * 100)*0.8+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking.
-    if (loaded === total) {
-        setTimeout(() => {
-            document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
-            },300)
+        document.getElementsByClassName('loading-item')[0].innerText = `${(loaded % 2 === 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((loaded / total)*100000)/1000}%`; 
+        globalHandler.log(document.getElementsByClassName('loading-item')[0].innerText, "Loader")
+        document.getElementsByClassName('loading-inner-bar')[0].style.width = ((loaded / total*0.8)*100+((connectedToServer) ? 20 : 0))*0.98  + '%'; // *0.98 for styling and *0.8 as 20% of the bar is for networking
+        if (loaded === total) {
+            globalHandler.log("Loaded all models", "Loader");
+            loadAudio();
         }
     }
 };
@@ -100,6 +108,58 @@ renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.VSMShadowMap;
+
+const listener = new THREE.AudioListener();
+camera.add( listener );
+
+const sound = new THREE.Audio( listener );
+
+const audioLoader = new THREE.AudioLoader();
+// Load Audio
+let soundBuffers = [];
+function loadAudio() {
+    let loadedTotal = 0;
+    let sounds = ['valve_csgo_01/mainmenu.mp3', 'valve_csgo_02/mainmenu.mp3', 'mainmenu.mp3'];
+    for (let i=0;i<sounds.length;i++) {
+        let item = `./assets/audio/music/${sounds[i]}`
+        audioLoader.load( item, function( buffer ) {
+            soundBuffers.push({
+                "name": sounds[i],
+                "buffer": buffer,
+            })
+        }, function ( xhr ) {
+            globalHandler.log(`${item} | ${Math.round((xhr.loaded / xhr.total)*100000)/1000}%`, "Loader");
+            if (xhr.loaded / xhr.total === 1) {
+                loadedTotal++;
+            }
+            document.getElementsByClassName('loading-item')[0].innerText = `${(xhr.loaded / xhr.total !== 1) ? 'Loading' : 'Loaded'} ${(item.length > 53) ? item.slice(0,50)+'...' : item} | ${Math.round((xhr.loaded / xhr.total)*100000)/1000}%`; 
+            document.getElementsByClassName('loading-inner-bar')[0].style.width = ((xhr.loaded / xhr.total))*98*(loadedTotal/sounds.length)  + '%'; // *0.98 for styling
+            if (loadedTotal === 3) {
+                setTimeout(() => {
+                    document.getElementById('loader').innerHTML = `<button class="btn btn-dark" onclick="joinGame();">Join Game</button>`;
+                },1000)
+            }
+        },
+
+        // onError callback
+        function ( err ) {
+            console.log( err );
+        });
+    }
+}
+
+audioLoader.load( `./assets/audio/music/mainmenu.mp3`, function( sb ) {
+    sound.setBuffer( sb );
+    sound.setLoop( false );
+    sound.setVolume( 0.5 );
+    sound.play();
+});
+// setTimeout(() => {
+//     console.log(soundBuffers)
+//     sound.stop();
+//     sound.setBuffer( soundBuffers.find((x) => x.name == "valve_csgo_02/mainmenu.mp3").buffer );
+//     sound.play();
+// }, 6000);
 
 const container = document.getElementById( 'container' );
 
@@ -257,10 +317,9 @@ document.addEventListener( 'click', (e) => {
                 } else {
                     globalHandler.log("Invalid modelID", "Damage");
                 }
-            } else {
+            } else if (globalHandler.getSettings().rendering.arrowHelpers) {
                 arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));
                 scene.add( arrowHelpers[arrowHelpers.length-1]);
-
             }
             /*
                 An intersection has the following properties :
@@ -528,9 +587,6 @@ loader.load( 'scene.glb', ( gltf ) => {
 } );
 
 
-// Load in settings
-let clientSettings = globalHandler.getSettings();
-
 // Movement
 let curProps = Object.getOwnPropertyNames(clientSettings.movement);
 for (let i=0; i<curProps.length; i++) {
@@ -560,6 +616,19 @@ document.getElementById(`settings-mouse-2`).addEventListener("change", (e) => {
     clientSettings.mouse.sensitivity = e.target.value;
     saveSettings(clientSettings);
 }); 
+
+// Create listeners for Crosshair
+curProps = Object.getOwnPropertyNames(clientSettings.crosshair);
+for (let i=0; i<3; i++) {
+    // document.getElementById(`settings-crosshair-${i+1}`).value = 
+    document.getElementById(`settings-crosshair-${i+1}`).addEventListener("change", (e) => {
+        e.preventDefault();
+        clientSettings.crosshair[curProps[i]] = e.target.value * ((e.target.id.slice(19) != 2) ? 0.5 : 2)
+        renderCrosshair(clientSettings.crosshair.offset, clientSettings.crosshair.cLength, clientSettings.crosshair.cWidth)
+        // console.log(clientSettings.crosshair)
+        saveSettings(clientSettings);
+    }); 
+} 
 
 /**
  * Transfers data to the server and renders entities
@@ -628,13 +697,47 @@ function showStats(enabled = true) {
     }
 }
 
+// Post processing loader
+const composer = new EffectComposer( renderer );
+composer.setPixelRatio( 1 ); // ensure pixel ratio is always 1 for performance reasons
+
+if (clientSettings.rendering.shaders) {
+
+    composer.addPass( new RenderPass( scene, camera ) );
+
+    if (clientSettings.rendering.fxaa) {
+
+        composer.addPass( new ShaderPass( FXAAShader ) );
+    
+    }
+
+    if (clientSettings.rendering.ssaa) {
+
+        let ssaaRenderPass = new SSAARenderPass( scene, camera );
+        ssaaRenderPass.sampleLevel = clientSettings.rendering.sampling;
+        composer.addPass( ssaaRenderPass );
+
+    }
+
+    if (clientSettings.rendering.luminosity) {
+
+        composer.addPass( new ShaderPass( LuminosityShader ) );
+
+    }
+
+    composer.addPass( new ShaderPass( CopyShader ) );
+
+}
+
+
 /**
  * Frame handler
  * @author  https://github.com/mrdoob/three.js
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @returns {void}
- * @version 1.1
+ * @version 1.2
  */
+
 function animate() {
 
     if (!inGame) return;
@@ -665,7 +768,14 @@ function animate() {
     
     stats.update();
 
-    requestAnimationFrame( animate );
+    setTimeout( function() {
+
+        requestAnimationFrame( animate );
+        composer.render();
+
+    }, 1/(globalHandler.getSettings().rendering.frameLimit === 60) ? 1 : globalHandler.getSettings().rendering.frameLimit*1000 );
+
+
 
 }
 
@@ -788,7 +898,7 @@ globalHandler.gameEndScreen = () => {
  * @version     1.0
  */
 globalHandler.reload = () => reloadAmmo();
-addKeyBind(() => {globalHandler.reload()}, globalHandler.getSettings().game.reload);
+addKeyBind(() => {globalHandler.reload()}, clientSettings.game.reload);
 
 // Testing functions
 globalHandler.wireframe = (enabled) => enableWireframe(enabled);
