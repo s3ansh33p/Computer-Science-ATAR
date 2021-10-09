@@ -6,3 +6,6 @@ node_modules/
 
 # The file containing environment variables - for some reason this does not work??
 **/.env
+
+# Audio - will be hosted on server
+src/assets/audio/music
