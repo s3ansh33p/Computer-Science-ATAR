@@ -247,9 +247,15 @@ body.center {
         position: absolute;
         top: 20px;
         right: 20px;
-        padding: 8px;
         display: flex;
+        flex-direction: column;
         background: rgba(0,0,0,0.7);
+
+        & > * {
+
+            padding: 8px;
+
+        }
     }
 
     #settings {
@@ -290,6 +296,7 @@ body.center {
         width: calc(100% - 150px);
         backdrop-filter: blur(15px);
         position: absolute;
+        background-color: rgba(0, 0, 0, 0.1);
     }
 
     #menu {
@@ -317,6 +324,16 @@ body.center {
             display: flex;
             flex-direction: column;
             height: 100%;
+
+            img { 
+                width: 65px;
+
+                &:hover {
+
+                    filter: drop-shadow(2px 4px 6px black);
+
+                }
+            }
         }
     }
 
@@ -403,7 +420,7 @@ body.center {
         -ms-user-select: none;
         user-select: none;
         pointer-events: none;
-        z-index: 1; /* TODO Solve this in HTML */
+        z-index: 1;
     }
 
     #health-container {
