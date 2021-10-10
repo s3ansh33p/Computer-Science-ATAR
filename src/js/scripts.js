@@ -776,12 +776,12 @@ const defaultSettings = {
     },
     "rendering": {  
         "frameLimit": 60,
-        "arrowHelpers": false,
+        "arrowHelpers": true,
         "shaders": true,
         "fxaa": true,
         "ssaa": false,
         "luminosity": true,
-        "sampling": 1
+        "sampling": 5
     },
     "test": {
         "key": "KeyX",

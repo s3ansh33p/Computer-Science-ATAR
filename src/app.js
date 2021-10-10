@@ -123,13 +123,13 @@ wss.on('connection', (ws) => {
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
                 
-                // connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
-                //     if (error) throw error;
-                //     if (results.length > 0) {
-                //         ws.userData.username = results[0].username;
-                //     }
-                // });
-                ws.userData.username = 'TMP';
+                connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
+                    if (error) throw error;
+                    if (results.length > 0) {
+                        ws.userData.username = results[0].username;
+                    }
+                });
+                // ws.userData.username = 'TMP';
 
             } else {
                 Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);
