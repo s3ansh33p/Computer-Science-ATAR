@@ -148,10 +148,10 @@ function loadAudio() {
     }
 }
 
-audioLoader.load( `./assets/audio/music/valve_csgo_02/mainmenu.mp3`, function( sb ) {
+audioLoader.load( `./assets/audio/music/mainmenu.mp3`, function( sb ) {
     sound.setBuffer( sb );
     sound.setLoop( false );
-    sound.setVolume( 0.05 );
+    sound.setVolume( 0.5 );
     sound.play();
 });
 // setTimeout(() => {
