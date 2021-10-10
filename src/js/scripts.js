@@ -41,7 +41,7 @@ function sendData(data) {
      * @constant
      * @type {string[]}
      */
-    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH", "DAMAGE", "MS" ];
+    const typings = [ "PING", "CHATMESSAGE" , "PLAYERUPDATE" , "AUTH", "DAMAGE", "KICK", "MS" ];
 
     if (typings.indexOf(data.type.toUpperCase()) === -1) {
 
@@ -82,9 +82,9 @@ function sendData(data) {
         byteData.push(encodeHex(data.data.clientID));
         byteData.push(1); // Mesh Name -> 1 headshot
 
-    } else if (byteData[0] === 5) {
+    } else if (byteData[0] === 6) {
 
-        byteData.push(encodeHex(data.data.ms));
+        byteData.push(data.data.ms);
 
     }
 
@@ -103,10 +103,22 @@ function sendData(data) {
  const encodeHex = (hex) => {return hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))}
 
 /**
+ * The client's ping
+ * @type {number}
+ */
+let clientMS = 0;
+
+ /**
  * The players client id used or networking
  * @type {string}
  */
 let clientID = '';
+
+ /**
+ * Tracks if the client is 'dead'
+ * @type {bool}
+ */
+let isDead = false;
 
 /**
  * An array of other players (does not include the player)
@@ -118,6 +130,7 @@ let clientID = '';
  * @property {number}  otherPlayers[index].z        - Another player's z camera position in the scene
  * @property {number}  otherPlayers[index].rotation - Another player's camera rotation in the scene
  * @property {string}  otherPlayers[index].client   - Another player's client id
+ * @property {string}  otherPlayers[index].client   - Another player's username
  */
 let otherPlayers = [];
 
@@ -192,6 +205,8 @@ server.onmessage = function (event) {
 
     const Uint8View = new Uint8Array(event.data);
 
+    let decodedClient;
+
     switch(Uint8View[0]) {
 
         case 0:
@@ -202,11 +217,21 @@ server.onmessage = function (event) {
         case 1:
 
             connectedToServer = true;
-            clientID = decodeClient(Uint8View.slice(1));
+            clientID = decodeClient(Uint8View.slice(1,9));
 
             const conMS = Math.round(timerEnd('connectionMS'));
             document.getElementsByClassName('loading-text')[0].innerHTML = `<p>Connected to server in ${conMS}ms</p>`;
             console.log(`%c[Network]%c Connected to server in ${conMS}ms`,"color: #fff000;","");
+
+            let gameTimeTmp = decodeClient(Uint8View.slice(9)).toString();
+            gameTime = parseInt(gameTimeTmp.slice(0,2) + gameTimeTmp.slice(3,4))
+            console.log(`%c[Network]%c Synced Server Game Time: ${getGameLength(gameTime)}`,"color: #fff000;","");
+
+            if (!gameTimers) {
+                gameTimers = setInterval(() => {
+                    updateGameTimers();
+                }, 1000); // Timer
+            }        
 
             sendData({
                 'data': {
@@ -218,7 +243,7 @@ server.onmessage = function (event) {
 
             sendData({
                 'data': {
-                         'ms': conMS.toString(),
+                         'ms': encodeHex(conMS.toString()),
                 },
                 'type': 'ms'
             })
@@ -237,7 +262,7 @@ server.onmessage = function (event) {
             
             for (let i = 0; i < Uint8View[1]; i++) {
                 
-                const decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
+                decodedClient = decodeClient( Uint8View.slice( 2+i*9 , 10+i*9 ) );
                 
                 const team = (Uint8View.slice(10+i*9,11+i*9)[0] === 0 ? 'T' : 'CT');
                 totalTeams[(team === "T") ? 0 : 1]++;
@@ -249,13 +274,15 @@ server.onmessage = function (event) {
                         'z':0,
                         'rotation': 0,
                         'client': decodedClient,
-                        'team': team
+                        'team': team,
+                        'username': 'Loading...',
+                        'ms': 0
                     })
                 } else {
                     function loaded() {
                         globalHandler.playerData.team = team;
                         globalHandler.log('All critical data loaded successfully');
-                        let curSettings = globalHandler.getSettings();
+                        let curSettings = getSettings();
                         if (curSettings.rendering.frameLimit < 30) globalHandler.log(`Low frame limit can lead to collision issues. Found value ${curSettings.rendering.frameLimit}`, "System")
                         if (curSettings.rendering.fxaa) {
                             globalHandler.log(`Enabling FXAA can lead to poor performance on weak hardware.`, "System")
@@ -300,7 +327,7 @@ server.onmessage = function (event) {
                     }
                 }
                 const innerHMTL = `	<tr id="client-${decodedClient}">
-                <td>47</td>
+                <td>0</td>
                 <td>
                     <img src="./assets/author.png">
                     <img src="./assets/author.png">
@@ -318,6 +345,15 @@ server.onmessage = function (event) {
             document.getElementsByClassName('tb-1')[0].children[2].innerText = `Alive: ${totalTeams[1]}/${totalTeams[1]}`;
             document.getElementsByClassName('tb-1')[1].children[2].innerText = `Alive: ${totalTeams[0]}/${totalTeams[0]}`;
 
+            if (clientMS !== 0) {
+                sendData({
+                    'data': {
+                             'ms': encodeHex(clientMS.toString()),
+                    },
+                    'type': 'ms'
+                })
+            }
+
             break;
 
         case 3:
@@ -325,7 +361,8 @@ server.onmessage = function (event) {
             const chatContainer = document.getElementById('chat-msg-container');
 
             let serverMsg = (decodeClient(Uint8Array.from(Uint8View.slice(1,9))) === '1000000000000000');
-            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span${serverMsg ? ' style="color: #f00"' : ''}>${serverMsg ? '[SERVER]' : decodeClient(Uint8Array.from(Uint8View.slice(1,9)))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
+
+            chatContainer.innerHTML = `<div class="chat-wrapper"><div class="chat-msg"><span${serverMsg ? ' style="color: #f00"' : ''}>${serverMsg ? '[SERVER]' : lookupID(decodeClient(Uint8Array.from(Uint8View.slice(1,9))))}: </span>${new TextDecoder("utf-8").decode(Uint8View.slice(9))}</div></div>` + chatContainer.innerHTML;
             
             if (chatContainer.children.length > 20) {
 
@@ -338,7 +375,7 @@ server.onmessage = function (event) {
             
             if (otherPlayers.length !== 0) {
 
-                const decodedClient = decodeClient( Uint8View.slice(1,9) );
+                decodedClient = decodeClient( Uint8View.slice(1,9) );
 
                 let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
 
@@ -357,19 +394,17 @@ server.onmessage = function (event) {
 
         case 6:
 
-            globalHandler.log(Uint8View);
-            const decodedClient = decodeClient( Uint8View.slice(1,9) );
+            decodedClient = decodeClient( Uint8View.slice(1,9) );
 
             if (decodedClient === clientID) {
 
-                globalHandler.playerData.health -= 20;
-                globalHandler.log(globalHandler.playerData.health)
+                globalHandler.playerData.health = Uint8View.slice(9,10);
 
                 if (globalHandler.playerData.health < 1) {
 
-                    globalHandler.playerData.health = 0
+                    globalHandler.playerData.health = 100
 
-                    alert('You have been killed');
+                    globalHandler.log('Client validation of death');
 
                 }
 
@@ -381,12 +416,62 @@ server.onmessage = function (event) {
 
         case 7:
 
-            globalHandler.log(Uint8View);
-            const decodedClientID = decodeClient( Uint8View.slice(1,9) );
+            decodedClient = decodeClient( Uint8View.slice(1,9) );
 
-            console.log(decodedClientID);
-            console.log(Uint8View.slice(9,Uint8View.length))
+            let ms = decodeClient(Uint8View.slice(9,Uint8View.length));
+
+            let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
+            if (index !== -1) { // checks if the player exists
+
+                otherPlayers[index].ms = ms;
+
+            } else if (decodedClient === clientID) {
+
+                clientMS = ms;
+
+            }
+            
+            let tabInfo = document.getElementById(`client-${decodedClient}`);
+
+            if (tabInfo !== null) {
+                tabInfo.children[0].innerText = ms;
+            }
           
+            break;
+
+        case 8:
+
+            decodedClient = decodeClient( Uint8View.slice(1,9) );
+            console.log(decodeClient( Uint8View.slice(9,17) ))
+            sendFeed({
+                'attacker': decodeClient( Uint8View.slice(9,17) ),
+                'victim': decodedClient
+            });
+
+            if (decodedClient === clientID) {
+
+                globalHandler.log('Server validation of death');
+                sendGameAlert('You were killed')
+                isDead = true;
+                setTimeout(() => {
+                    isDead = false;
+                    globalHandler.spawn();
+                }, 3000);
+
+            } else {
+                
+                // prepare model for respawning
+                let index = otherPlayers.findIndex(obj => obj.client === decodedClient);
+                if (index !== -1) { // checks if the player exists
+
+                    otherPlayers[index].x = 0
+                    otherPlayers[index].y = 0
+                    otherPlayers[index].z = 0
+
+                }
+
+            }
+
             break;
 
         default:
@@ -446,9 +531,31 @@ server.onopen = function () {
     setInterval(ping, 30000);
 }
 
+// Deafults to 600 unless updated by server
 let gameTime = 600;
 let gameTimers;
 
+/**
+ * Converts a clientID to a username
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number[]} id The client id in hex form
+ * @returns {string}
+ * @version 1.0
+ */
+function lookupID(id) {
+    console.log(id)
+    if (clientID === id) {
+        return `${username} (you)`;
+    } else {
+        let otherPlayer = otherPlayers.find(x=>x.client === id)
+        if (otherPlayer !== undefined) {
+            console.log(otherPlayer)
+            return otherPlayer.username
+        } else {
+            return id;
+        }
+    }
+}
 
 /**
  * Join a game
@@ -464,20 +571,14 @@ function joinGame() {
     // Temporarily set tab mode info
     setTabMode(0, "Deathmatch") // Mode
     setTabMode(1, "Dust II") // Map
-    if (!gameTimers) {
-        gameTimers = setInterval(() => {
-            updateGameTimers();
-        }, 1000); // Timer
+    setTimeout(() => {
+        inGame = true;
+        globalHandler.animate();
+    }, 400);
 
-        setTimeout(() => {
-            inGame = true;
-            globalHandler.animate();
-        }, 400);
-
-        setTimeout(() => {
-            document.getElementById('loader').remove();
-        }, 2500);
-    }
+    setTimeout(() => {
+        document.getElementById('loader').remove();
+    }, 2500);
 
 }
 
@@ -537,8 +638,6 @@ function gameMenu(index) {
     } else if (index === 2) {
         // Call vote to kick player
     } else if (index === 3) {
-        // Inventory
-    } else if (index === 4) {
         // Return to home UI
         // Add a confirm exit modal...
         window.location.href = window.location.href.slice(0, window.location.href.lastIndexOf('/'))+'/home';
@@ -549,7 +648,7 @@ function gameMenu(index) {
 };
 
 // Attach listeners to the game menu
-for (let i=0; i<5; i++) {
+for (let i=0; i<4; i++) {
     document.getElementById(`gameMenu-${i}`).addEventListener('click', (e) => {
         e.preventDefault();
         gameMenu(i);
@@ -622,8 +721,8 @@ function saveSettings(settings) {
 function resetSettings() {
     if (localStorage) {
         localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
-        // Todo: ender in settings menu
-        
+        globalHandler.renderMainSettings(true);
+        globalHandler.log("Reset settings to deafult binds");
     }
 }
 
@@ -745,12 +844,14 @@ document.getElementById('chat-input').addEventListener('focus', (e) => {
 });
 
 function dropSettings(elem) {
+    let clientSettings = getSettings();
+    elem.parentElement.parentElement.children[0].innerText = elem.innerText;
     if (elem.parentElement.parentElement.children[0].id === 'settings-mouse-1') {
-        elem.parentElement.parentElement.children[0].innerText = elem.innerText;
-        let clientSettings = globalHandler.getSettings();
         clientSettings.mouse.invert = (elem.innerText === 'Yes') ? true : false;
-        saveSettings(clientSettings);
+    } else if (elem.parentElement.parentElement.children[0].id === 'settings-dev-1') {
+        clientSettings.test.devMode = (elem.innerText === 'Yes') ? true : false;
     }
+    saveSettings(clientSettings);
 }
 
 const defaultSettings = {
@@ -769,24 +870,28 @@ const defaultSettings = {
         "offset": 15,
         "cLength": 50,
         "cWidth": 5,
-        "colour": 'yellow'
+        "r": 255,
+        "g": 255,
+        "b": 0
     },
     "game": {
         "reload": "KeyR"
     },
     "rendering": {  
         "frameLimit": 60,
-        "arrowHelpers": true,
-        "shaders": true,
-        "fxaa": true,
+        "arrowHelpers": false,
+        "shaders": false,
+        "fxaa": false,
         "ssaa": false,
-        "luminosity": true,
-        "sampling": 5
+        "luminosity": false,
+        "sampling": 1,
+        "quality": window.devicePixelRatio
     },
     "test": {
-        "key": "KeyX",
+        "devMode": true,
         "dev": "KeyQ",
-        "stats": "KeyE"
+        "stats": "KeyE",
+        "key": "KeyX"
     },
     "ui": {
         "scores": "Tab",
@@ -796,10 +901,6 @@ const defaultSettings = {
         },
         "sidemenu": "Escape"
     }
-}
-
-function test() {
-    globalHandler.log('Binded Key')
 }
 
 function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') {
@@ -826,16 +927,22 @@ function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') 
     render()
 }
 
-renderCrosshair();
-
 let wireframeOn = false;
 let statsOn = false;
 // Map binds
-addKeyBind(test, getSettings().test.key);
+addKeyBind(() => {if (getSettings().test.devMode) {globalHandler.log("Triggered Test Bind", "Debug")}}, getSettings().test.key);
 addKeyBind(showScoresMenu, getSettings().ui.scores);
 addKeyBind(toggleSideMenu, getSettings().ui.sidemenu);
-addKeyBind(() => {wireframeOn = !wireframeOn; globalHandler.wireframe(wireframeOn)}, getSettings().test.dev);
-addKeyBind(() => {statsOn = !statsOn; globalHandler.showStats(statsOn)}, getSettings().test.stats);
+addKeyBind(() => {if (getSettings().test.devMode) {
+    wireframeOn = !wireframeOn;
+    globalHandler.wireframe(wireframeOn);
+    globalHandler.log(`${wireframeOn ? 'En' : 'Dis'}abled wireframe`, "Debug")}
+}, getSettings().test.dev);
+addKeyBind(() => {if (getSettings().test.devMode) {
+    statsOn = !statsOn;
+    globalHandler.showStats(statsOn);
+    globalHandler.log(`${statsOn ? 'En' : 'Dis'}abled stats`, "Debug")}
+}, getSettings().test.stats);
 
 /**
  * Display the scores menu
@@ -881,21 +988,24 @@ function lockChangeAlert() {
  * Renders a message in the kill feed
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {Object} data JSON object that contains the event
+ * @todo    implement multiple weapons
  * @returns {void}
  * @version 1.0
  * @example
  * sendFeed({
  *  'attacker': 'clientID',
- *  'victim': 'clientID,
- *  'eventType': 'AK-47'
+ *  'victim': 'clientID
  * })
  */
-function sendFeed(data = {}) {
+function sendFeed(data) {
     document.getElementById('feed-container').innerHTML += `<div class="d-flex align-items-center">
-    <p class="mb-0 text-warning">dinrah</p>
+    <p class="mb-0 text-warning">${lookupID(data.attacker)}</p>
     <img src="./assets/feed/ak-47.svg" class="mx-2" style="width: 40px">
-    <p class="mb-0 text-info">MartyMcKnife</p>
+    <p class="mb-0 text-info">${lookupID(data.victim)}</p>
 </div>`;
+    setTimeout(() => {
+        document.getElementById('feed-container').children[0].remove();
+    }, 5000);
 }
 
 /**
@@ -916,4 +1026,6 @@ globalHandler.getSettings = () => getSettings();
  */
 globalHandler.otherPlayers = () => {return otherPlayers};
 
-resetSettings();
+setTimeout(() => {
+    resetSettings();
+}, 4000);

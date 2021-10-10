@@ -21,7 +21,7 @@ let playerData = {
 var manager = new THREE.LoadingManager();
 
 // Load in settings
-let clientSettings = globalHandler.getSettings();
+let clientSettings = getSettings();
 
 /**
  * Edits the loading bar's contents
@@ -44,6 +44,7 @@ manager.onProgress = function ( item, loaded, total ) {
     }
 };
 
+// don't have time to implement weapon system
 const weaponData = [
     {
         'name': 'AK-47',
@@ -105,6 +106,7 @@ scene.add( directionalLight );
 
 const renderer = new THREE.WebGLRenderer( { antialias: true } );
 renderer.setPixelRatio( window.devicePixelRatio );
+// renderer.setPixelRatio( window.devicePixelRatio * 2 ); screen.width
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.VSMShadowMap;
@@ -148,11 +150,11 @@ function loadAudio() {
     }
 }
 
-audioLoader.load( `./assets/audio/music/valve_csgo_02/mainmenu.mp3`, function( sb ) {
+audioLoader.load( `./assets/audio/music/mainmenu.mp3`, function( sb ) {
     sound.setBuffer( sb );
     sound.setLoop( false );
-    sound.setVolume( 0.05 );
-    sound.play();
+    sound.setVolume( 0 );
+    // sound.play();
 });
 // setTimeout(() => {
 //     console.log(soundBuffers)
@@ -177,12 +179,112 @@ const GRAVITY = 30;
 
 const worldOctree = new Octree();
 
-// T Spawn
-const playerCollider = new Capsule( new THREE.Vector3( -15, 4.35, 35 ), new THREE.Vector3( -15, 5, 35 ), 0.35 );
-camera.lookAt(-1, 0, -28);
-// CT Spawn
-// const playerCollider = new Capsule( new THREE.Vector3( 5, -1, -28 ), new THREE.Vector3( 5, -0.35, -28 ), 0.35 );
-// camera.lookAt(-1, 0, 35);
+const spawns = [{
+    'name': 'T Spawn',
+    'x': -15,
+    'y': 4.35,
+    'z': 35,
+    'dx': -1,
+    'dz': -28
+},{
+    'name': 'CT Spawn',
+    'x': 5,
+    'y': -1,
+    'z': -28,
+    'dx': -1,
+    'dz': 35
+},{
+    'name': 'Bombsite A',
+    'x': 22,
+    'y': 3,
+    'z': -31,
+    'dx': -5,
+    'dz': 10
+},{
+    'name': 'Bombsite B',
+    'x': -39,
+    'y': 2,
+    'z': -37,
+    'dx': 5,
+    'dz': 10
+},{
+    'name': 'A Doors',
+    'x': 14,
+    'y': 1.5,
+    'z': 8.8,
+    'dx': -1,
+    'dz': 7
+},{
+    'name': 'Upper B',
+    'x': -42.7,
+    'y': 2,
+    'z': -4.4,
+    'dx': 12,
+    'dz': -3
+},{
+    'name': 'Lower B',
+    'x': -23,
+    'y': -1,
+    'z': -9,
+    'dx': 9,
+    'dz': 8
+},{
+    'name': 'A Long',
+    'x': 34,
+    'y': 2.9,
+    'z': 4,
+    'dx': -15,
+    'dz': -8
+},{
+    'name': 'A Short',
+    'x': 9,
+    'y': 3.4,
+    'z': -16.3,
+    'dx': -7,
+    'dz': 16
+},{
+    'name': 'Mid Doors',
+    'x': -9,
+    'y': -1,
+    'z': -15,
+    'dx': 7,
+    'dz': 16
+},{
+    'name': 'Top Mid',
+    'x': 2,
+    'y': 1.5,
+    'z': 12,
+    'dx': 13,
+    'dz': 15
+},{
+    'name': 'T Ramp',
+    'x': -39,
+    'y': 1.5,
+    'z': 21,
+    'dx': 4,
+    'dz': 7
+},{
+    'name': 'Catwalk',
+    'x': -4,
+    'y': 1.5,
+    'z': -1,
+    'dx': 3,
+    'dz': 5
+},{
+    'name': 'Scaffolding',
+    'x': -24,
+    'y': 3.5,
+    'z': -30,
+    'dx': 9,
+    'dz': 5
+},{
+    'name': 'B Closet',
+    'x': -33,
+    'y': 1.5,
+    'z': -13,
+    'dx': -1,
+    'dz': -5
+}];
 
 const playerVelocity = new THREE.Vector3();
 const playerDirection = new THREE.Vector3();
@@ -213,7 +315,7 @@ document.body.addEventListener( 'mousemove', ( event ) => {
 
     if ( document.pointerLockElement === document.body && inGame && !typing) {
 
-        let mouseProps = globalHandler.getSettings().mouse;
+        let mouseProps = getSettings().mouse;
 
         camera.rotation.y -= (event.movementX / ((101-mouseProps.sensitivity)*10))*(mouseProps.invert ? -1 : 1);
         camera.rotation.x -= (event.movementY / ((101-mouseProps.sensitivity)*10))*(mouseProps.invert ? -1 : 1);
@@ -233,13 +335,7 @@ function onWindowResize() {
 
 }
 
-// The default weapon should be an AK
-let ammo = weaponData[0].rounds.max;
-let mag = weaponData[0].rounds.max * weaponData[0].rounds.extramags;
-
-// preload ammo in UI
-document.getElementById('weapon-ammo').children[0].innerText = ammo;
-document.getElementById('weapon-ammo').children[1].innerText = "/"+mag;
+let ammo, mag;
 
 function updateAmmo() {
     if (ammo !== 0) {
@@ -261,6 +357,28 @@ function reloadAmmo() {
         ammoContainer[1].innerText = "/" + mag;  
     }
 }
+
+function resetAmmo() {
+    // The default weapon should be an AK
+    ammo = weaponData[0].rounds.max;
+    mag = weaponData[0].rounds.max * weaponData[0].rounds.extramags;
+
+    // preload ammo in UI
+    document.getElementById('weapon-ammo').children[0].innerText = ammo;
+    document.getElementById('weapon-ammo').children[1].innerText = "/"+mag;
+}
+
+let playerCollider;
+
+function spawn() {
+    const spawnIndex = Math.floor(Math.random()*spawns.length);
+    playerCollider = new Capsule( new THREE.Vector3( spawns[spawnIndex].x, spawns[spawnIndex].y, spawns[spawnIndex].z ), new THREE.Vector3( spawns[spawnIndex].x, spawns[spawnIndex].y+0.65, spawns[spawnIndex].z ), 0.35 );
+    camera.lookAt(spawns[spawnIndex].dx, 0, spawns[spawnIndex].dz);
+    console.log(`%c[System]%c Spawned at ${spawns[spawnIndex].name} (${spawnIndex+1}/${spawns.length})`,"color: #fff000;","");
+    resetAmmo();
+}
+
+spawn();
 
 function pointerCheck(e) {
     for (let i=0; i<e.path.length; i++) {
@@ -317,7 +435,7 @@ document.addEventListener( 'click', (e) => {
                 } else {
                     globalHandler.log("Invalid modelID", "Damage");
                 }
-            } else if (globalHandler.getSettings().rendering.arrowHelpers) {
+            } else if (getSettings().rendering.arrowHelpers) {
                 arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));
                 scene.add( arrowHelpers[arrowHelpers.length-1]);
             }
@@ -462,23 +580,23 @@ function controls( deltaTime ) {
 
     if ( !typing && inGame && locked) {
 
-        if ( keyStates[ globalHandler.getSettings().movement.forward ] ) {
+        if ( keyStates[ getSettings().movement.forward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( speed * deltaTime ) );
         }
 
-        if ( keyStates[ globalHandler.getSettings().movement.backward ] ) {
+        if ( keyStates[ getSettings().movement.backward ] ) {
             playerVelocity.add( getForwardVector().multiplyScalar( - speed * deltaTime ) );
         }
 
-        if ( keyStates[ globalHandler.getSettings().movement.left ] ) {
+        if ( keyStates[ getSettings().movement.left ] ) {
             playerVelocity.add( getSideVector().multiplyScalar( - speed * deltaTime ) );
         }
 
-        if ( keyStates[ globalHandler.getSettings().movement.right ] ) {
+        if ( keyStates[ getSettings().movement.right ] ) {
             playerVelocity.add( getSideVector().multiplyScalar( speed * deltaTime ) );
         }
 
-        if ( playerOnFloor && keyStates[ globalHandler.getSettings().movement.jump ] ) {
+        if ( playerOnFloor && keyStates[ getSettings().movement.jump ] ) {
             playerVelocity.y = 9;
         }
 
@@ -586,29 +704,18 @@ loader.load( 'scene.glb', ( gltf ) => {
 
 } );
 
-
-// Movement
-let curProps = Object.getOwnPropertyNames(clientSettings.movement);
-for (let i=0; i<curProps.length; i++) {
-    document.getElementById(`settings-movement-${i+1}`).value = clientSettings.movement[curProps[i]];
-    
-    // Create listeners
+// Create listeners for Movement
+for (let i=0; i<5; i++) {
     document.getElementById(`settings-movement-${i+1}`).addEventListener("keydown", (e) => {
-        curProps = Object.getOwnPropertyNames(clientSettings.movement);
+        let curProps = Object.getOwnPropertyNames(clientSettings.movement);
         e.preventDefault();
         e.target.value = e.code;
         let id = curProps[e.target.id.slice(e.target.id.lastIndexOf('-')+1)-1];
         clientSettings.movement[id] = e.code;
-        console.log(clientSettings)
+        // console.log(clientSettings)
         saveSettings(clientSettings);
     }); 
 }
-// Mouse
-curProps = Object.getOwnPropertyNames(clientSettings.mouse);
-// Invert Mouse
-document.getElementById(`settings-mouse-1`).innerText = (clientSettings.mouse[curProps[1]]) ? 'Yes' : 'No' ;
-// Mouse Sensitivty
-document.getElementById(`settings-mouse-2`).value = (clientSettings.mouse[curProps[0]]);
     
 // Create listeners for Mouse Sensitivity
 document.getElementById(`settings-mouse-2`).addEventListener("change", (e) => {
@@ -618,17 +725,78 @@ document.getElementById(`settings-mouse-2`).addEventListener("change", (e) => {
 }); 
 
 // Create listeners for Crosshair
-curProps = Object.getOwnPropertyNames(clientSettings.crosshair);
-for (let i=0; i<3; i++) {
-    // document.getElementById(`settings-crosshair-${i+1}`).value = 
+for (let i=0; i<6; i++) {
     document.getElementById(`settings-crosshair-${i+1}`).addEventListener("change", (e) => {
         e.preventDefault();
-        clientSettings.crosshair[curProps[i]] = e.target.value * ((e.target.id.slice(19) != 2) ? 0.5 : 2)
-        renderCrosshair(clientSettings.crosshair.offset, clientSettings.crosshair.cLength, clientSettings.crosshair.cWidth)
+        let curProps = Object.getOwnPropertyNames(clientSettings.crosshair);
+        clientSettings.crosshair[curProps[i]] = parseInt(e.target.value)
+        renderCrosshair(clientSettings.crosshair.offset, clientSettings.crosshair.cLength, clientSettings.crosshair.cWidth, `rgb(${clientSettings.crosshair.r}, ${clientSettings.crosshair.g}, ${clientSettings.crosshair.b})`)
         // console.log(clientSettings.crosshair)
         saveSettings(clientSettings);
     }); 
 } 
+
+// Create listeners for dev
+for (let i=1; i<4; i++) {
+    document.getElementById(`settings-dev-${i+1}`).addEventListener("keydown", (e) => {
+        let curProps = Object.getOwnPropertyNames(clientSettings.test);
+        e.preventDefault();
+        e.target.value = e.code;
+        removeKeyBind(clientSettings.test[curProps[i]]);
+        if (curProps[i] === "key") {
+            addKeyBind(() => {if (getSettings().test.devMode) {globalHandler.log("Triggered Test Bind", "Debug")}}, e.code);
+        } else if (curProps[i] === "dev") {
+            addKeyBind(() => {if (getSettings().test.devMode) {
+                wireframeOn = !wireframeOn;
+                globalHandler.wireframe(wireframeOn);
+                globalHandler.log(`${wireframeOn ? 'En' : 'Dis'}abled wireframe`, "Debug")}
+            }, e.code);
+        } else {
+            addKeyBind(() => {if (getSettings().test.devMode) {
+                statsOn = !statsOn;
+                globalHandler.showStats(statsOn);
+                globalHandler.log(`${statsOn ? 'En' : 'Dis'}abled stats`, "Debug")}
+            }, e.code);
+        }
+        clientSettings.test[curProps[i]] = e.code
+        // console.log(clientSettings.test) 
+        saveSettings(clientSettings);
+    }); 
+} 
+
+/**
+ * Updates settings UI to default values
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function renderMainSettings(fetchNew = false) {
+    if (fetchNew) clientSettings = getSettings(); // after reset
+    // Movement
+    let curProps = Object.getOwnPropertyNames(clientSettings.movement);
+    for (let i=0; i<curProps.length; i++) {
+        document.getElementById(`settings-movement-${i+1}`).value = clientSettings.movement[curProps[i]];
+    }
+    // Mouse
+    curProps = Object.getOwnPropertyNames(clientSettings.mouse);
+    document.getElementById(`settings-mouse-1`).innerText = (clientSettings.mouse[curProps[1]]) ? 'Yes' : 'No';
+    document.getElementById(`settings-mouse-2`).value = (clientSettings.mouse[curProps[0]]);
+    // Crosshair 
+    curProps = Object.getOwnPropertyNames(clientSettings.crosshair);
+    for (let i=0; i<6; i++) {
+        document.getElementById(`settings-crosshair-${i+1}`).value = clientSettings.crosshair[curProps[i]];
+    }
+    // Dev
+    curProps = Object.getOwnPropertyNames(clientSettings.test);
+    document.getElementById(`settings-dev-1`).innerText = (clientSettings.test[curProps[0]]) ? 'Yes' : 'No';
+    for (let i=1; i<4; i++) {
+        document.getElementById(`settings-dev-${i+1}`).value = clientSettings.test[curProps[i]];
+    }
+    // Render Crosshair
+    renderCrosshair(clientSettings.crosshair.offset, clientSettings.crosshair.cLength, clientSettings.crosshair.cWidth, `rgb(${clientSettings.crosshair.r}, ${clientSettings.crosshair.g}, ${clientSettings.crosshair.b})`)
+}
+
+renderMainSettings();
 
 /**
  * Transfers data to the server and renders entities
@@ -676,7 +844,9 @@ function transferData() {
             text.rotation.set(0, THREE.Math.degToRad(180+camRotation), 0);
         }
 
-        // document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
+        if (clientSettings.test.devMode) {
+            document.getElementById('debug').innerHTML = `Player X: ${playerData.position.x}, Y: ${playerData.position.y}, Z: ${playerData.position.z} | Deg: ${playerData.rotation}<br>Gun X: ${AK.position.x}, Y: ${AK.position.y}, Z: ${AK.position.z}`;
+        }
         sendData({
             'data':{
                 'x':playerData.position.x || 0,
@@ -750,10 +920,16 @@ function animate() {
 
     } else {
         
-        controls( deltaTime );
-            
-        updatePlayer( deltaTime );
-            
+        if (!isDead) {
+
+            controls( deltaTime );
+        
+            updatePlayer( deltaTime );
+
+            transferData();
+
+        }
+        
         renderer.render( scene, camera );
         
         if ( mixer ) {
@@ -761,8 +937,6 @@ function animate() {
             mixer.update( deltaTime );
             
         }
-
-        transferData();
 
     }
     
@@ -773,9 +947,7 @@ function animate() {
         requestAnimationFrame( animate );
         composer.render();
 
-    }, 1/(globalHandler.getSettings().rendering.frameLimit === 60) ? 1 : globalHandler.getSettings().rendering.frameLimit*1000 );
-
-
+    }, 1/(getSettings().rendering.frameLimit === 60) ? 1 : getSettings().rendering.frameLimit*1000 );
 
 }
 
@@ -841,8 +1013,23 @@ globalHandler.showStats = (enabled) => showStats(enabled);
  */
 globalHandler.loadPlayer = () => loadPlayerModel();
 
-// Global access to player models.
+/**
+ * An object to store the player models
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
 globalHandler.playerModels = playerModels;
+
+/**
+ * An object to store the properties of the main sound
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.sound = sound;
 
 /**
  * An object to store the properties of the game
@@ -874,7 +1061,7 @@ globalHandler.log = (content, title="System") => {
 }
 
 /**
- * A function in globalHandler (globalHandler.log) 
+ * A function in globalHandler (globalHandler.gameEndScreen) 
  * @author      Sean McGinty <newfolderlocation@gmail.com>
  * @method
  * @returns     {void}
@@ -900,5 +1087,29 @@ globalHandler.gameEndScreen = () => {
 globalHandler.reload = () => reloadAmmo();
 addKeyBind(() => {globalHandler.reload()}, clientSettings.game.reload);
 
-// Testing functions
+/**
+ * A function in globalHandler (globalHandler.wireframe) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
 globalHandler.wireframe = (enabled) => enableWireframe(enabled);
+
+/**
+ * A function in globalHandler (globalHandler.renderMainSettings) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.renderMainSettings = (fetchNew) => renderMainSettings(fetchNew);
+
+ /**
+ * A function in globalHandler (globalHandler.renderMainSettings) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.spawn = () => spawn();
