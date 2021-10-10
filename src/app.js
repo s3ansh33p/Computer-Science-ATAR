@@ -18,8 +18,6 @@ const connection = mysql.createConnection({
     port: process.env.MYSQL_PORT || 3306
 });
 
-console.log(connection)
-
 /**
  * Port for the express server to serve content on
  * @constant {number} port An integer value between 1024 and 49151
@@ -39,6 +37,23 @@ const wsport = process.env.WS_PORT || 8999;
  * @constant {string} runtime Determines the correct URL for requests to be sent to
  */
 const runtime = (process.env.NODE_ENV === 'development') ? 'http://127.0.0.1:'+port : 'https://dev.seanmcginty.space';
+
+/**
+ * Holds the game time remaining
+ * @type {number}
+ */
+let gameTime = 0;
+ /**
+ * Holds the max game time
+ * @constant {number}
+ */
+const maxGameTime = 60;
+/**
+ * Holds the game time interval
+ * @type {Function}
+ */
+let gameTimers;
+
 
 // Routing for static files such as the css styling and three.js files
 app.use(express.static(__dirname + '/public'));
@@ -61,8 +76,13 @@ const wss = new WebSocket.Server({ server });
 
 /**
  * @name ws
- * @property {string}  ws.id                  - The client's socket id
- * @property {number}  ws.health              - The client's health points
+ * @property {string}  ws.id                  - The client's socket id or clientID
+ * @property {object}  ws.gameData            - The client's game information
+ * @property {number}  ws.gameData.kills      - The client's kills
+ * @property {number}  ws.gameData.assists    - The client's assists
+ * @property {number}  ws.gameData.deaths     - The client's deaths
+ * @property {number}  ws.gameData.health     - The client's health points
+ * @property {string}  ws.gameData.assistor   - The client's most recent source of damage for assist calculation
  * @property {object}  ws.playerData          - The client's player data for rendering
  * @property {number}  ws.playerData.x        - The client's x camera position in the scene
  * @property {number}  ws.playerData.y        - The client's y camera position in the scene
@@ -76,7 +96,15 @@ wss.on('connection', (ws) => {
 
     ws.id = wss.generateID();
 
-    ws.health = 100;
+    ws.cooldown = false;
+
+    ws.gameData = {
+        'kills':0,
+        'assists':0,
+        'deaths':0, 
+        'health': 100,
+        'assistor': ""
+    }
 
     ws.playerData = {
         'x':0,
@@ -110,7 +138,7 @@ wss.on('connection', (ws) => {
             // Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
             wss.broadcast({'message':message.slice(1,201),'client':ws.id}, 3)
 
-        } else if (message[0] === 2) {
+        } else if (message[0] === 2 && gameTimers) {
 
             // Logger.game(`Recieved playerUpdate from client "${ws.id}" | ${message.slice(1)}`);
             ws.playerData = message.slice(1);
@@ -123,22 +151,46 @@ wss.on('connection', (ws) => {
             if (authcode === '12345678') {
                 ws.userID = parseInt(decodeClient(message.slice(5)));
                 
-                connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
-                    if (error) throw error;
-                    if (results.length > 0) {
-                        ws.userData.username = results[0].username;
-                    }
-                });
-                // ws.userData.username = 'TMP';
+                // connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
+                //     if (error) throw error;
+                //     if (results.length > 0) {
+                //         ws.userData.username = results[0].username;
+                //     }
+                // });
+                ws.userData.username = 'TMP';
 
             } else {
                 Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);
             }
 
-        } else if (message[0] === 4) {
-            // Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
-            wss.broadcast({'message':[ws.health, message.slice(9)],'client':Array.from(message.slice(1,9))}, 6);
-        // Will need to add the ability to kick players. on 5
+        } else if (message[0] === 4 && gameTimers) {
+            Logger.game(`Recieved damageEvent from client "${ws.id}" | ${message.slice(1)}`);
+            let targetClient = decodeClient(Array.from(message.slice(1,9)))
+            wss.clients.forEach(function each(client) {
+                if (client.id === targetClient) {
+                    if (!client.cooldown) {
+                        client.gameData.health -= 20;
+                        client.gameData.assistor = ws.id
+                    }
+                    if (client.gameData.health <= 0) {
+                        // Check if a previous client dealt damage for assist bonus
+                        if (client.gameData.assistor != ws.id && client.gameData.assistor.length !== 0) {
+                            ws.gameData.assists++;
+                        }
+                        // Update kills and deaths for attacker and victim clients
+                        ws.gameData.kills++;
+                        client.gameData.deaths++;
+                        wss.broadcast({'killer': encodeClient(ws.id), 'client':targetClient}, 8);
+                        client.gameData.health = 100;
+                        client.cooldown = true;
+                        setTimeout(() => {
+                            client.cooldown = false;
+                        }, 3000);
+                    } else {
+                        wss.broadcast({'message':[client.gameData.health, message.slice(9)],'client':Array.from(message.slice(1,9))}, 6);
+                    }
+                }
+            });
         } else if (message[0] === 6) {
             Logger.game(`Recieved ms from client "${ws.id}" | ${message.slice(1)}`)
             wss.broadcast({'message':message.slice(1),'client':ws.id}, 7);
@@ -146,8 +198,24 @@ wss.on('connection', (ws) => {
 
     });
 
-    // Confirm that the client is connected and send them their client id
-    ws.send(new Uint8Array([1, encodeClient(ws.id)].flat()).buffer);
+    if (!gamerTimers && gameTime === 0) {
+        Logger.game("Creating new game");
+        gameTime = maxGameTime;
+        if (!gameTimers) {
+            gameTimers = setInterval(() => {
+                gameTime--;
+                if (gameTime === 0) {
+                    clearInterval(gameTimers);
+                    gameTimers = undefined;
+                    // Save the game data
+                    endGame()
+                }
+            }, 1000); // Timer 1s
+        }
+    }
+
+    // Confirm that the client is connected and send them their client id and game time
+    ws.send(new Uint8Array([1, encodeClient(ws.id), encodeClient(gameTime.toString())].flat()).buffer);
 
     let activePlayers = [];
     
@@ -160,6 +228,18 @@ wss.on('connection', (ws) => {
 
 });
 
+/**
+ * Saves game data and is called at the end of a game
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
+function endGame() {
+    Logger.game("Game ended");
+    wss.clients.forEach(function each(client) {
+        Logger.game(`Results for ${client.id} | Kills: ${client.gameData.kills} | Assists: ${client.gameData.assists} | Deaths: ${client.gameData.deaths} | Playing for ${client.userData.team ? 'Counter-Terrorists' : 'Terrorists'}`);
+    });            
+}
 
 /**
  * Encodes a client's id from hex to a byte array
@@ -211,6 +291,16 @@ wss.broadcast = function broadcast(msg, type) {
         
         byteData.push(msg.client);
         byteData.push(msg.message);
+
+    } else if (type === 7) {
+    
+        byteData.push(encodeClient(msg.client));
+        byteData.push(msg.message);
+
+    } else if (type === 8) {
+    
+        byteData.push(msg.client);
+        byteData.push(msg.killer);
 
     } else {
 
