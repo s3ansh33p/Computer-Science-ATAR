@@ -224,6 +224,7 @@ server.onmessage = function (event) {
             console.log(`%c[Network]%c Connected to server in ${conMS}ms`,"color: #fff000;","");
 
             let gameTimeTmp = decodeClient(Uint8View.slice(9)).toString();
+            // console.log(gameTimeTmp)
             gameTime = parseInt(gameTimeTmp.slice(0,2) + gameTimeTmp.slice(3,4))
             console.log(`%c[Network]%c Synced Server Game Time: ${getGameLength(gameTime)}`,"color: #fff000;","");
 
@@ -329,9 +330,7 @@ server.onmessage = function (event) {
                 const innerHMTL = `	<tr id="client-${decodedClient}">
                 <td>0</td>
                 <td>
-                    <img src="./assets/author.png">
-                    <img src="./assets/author.png">
-                    <span id="client-${decodedClient}-id">s3ansh33p</span> ${(decodedClient === clientID) ? '(you)' : ''}
+                    <span id="client-${decodedClient}-id">${(decodedClient === clientID) ? `${username} (you)` : 'Loading...'}</span>
                 </td>
                 <td>0</td>
                 <td>0</td>
@@ -442,15 +441,22 @@ server.onmessage = function (event) {
         case 8:
 
             decodedClient = decodeClient( Uint8View.slice(1,9) );
-            console.log(decodeClient( Uint8View.slice(9,17) ))
+            let attackerClient = decodeClient( Uint8View.slice(9,17) );
+            // console.log(decodeClient( Uint8View.slice(9,17) ))
+            // console.log(decodedClient)
             sendFeed({
-                'attacker': decodeClient( Uint8View.slice(9,17) ),
+                'attacker': attackerClient,
                 'victim': decodedClient
             });
+
+            if (attackerClient === clientID) {
+                globalHandler.playSFX("kill.wav");
+            }
 
             if (decodedClient === clientID) {
 
                 globalHandler.log('Server validation of death');
+                globalHandler.playSFX("deathcam.wav");
                 sendGameAlert('You were killed')
                 isDead = true;
                 setTimeout(() => {
@@ -471,6 +477,9 @@ server.onmessage = function (event) {
                 }
 
             }
+
+            // Update tab menu stats
+            getGameData();
 
             break;
 
@@ -531,6 +540,39 @@ server.onopen = function () {
     setInterval(ping, 30000);
 }
 
+function getGameData() {
+    try {
+        $.ajax({
+            // endpoint rendered in EJS
+            url: `${endpoint}/api/game`,
+            timeout: 3000,
+            error: function () {
+                console.log(`%c[Network]%c Game API timed out.`,"color: #fff000;","");
+            },
+            success: function (payload) {
+                for (let i=0; i<payload.length; i++) {
+                    let curContainer = document.getElementById(`client-${payload[i].id}`).children;
+                    curContainer[2].innerText = payload[i].kills;
+                    curContainer[3].innerText = payload[i].deaths;
+                    curContainer[4].innerText = payload[i].assists;
+                    curContainer[5].innerText = payload[i].kills* 2 + payload[i].assists;
+
+                    let index = otherPlayers.findIndex(obj => obj.client === payload[i].id);
+
+                    if (index !== -1) { // checks if the player exists
+    
+                        otherPlayers[index].username = payload[i].username;
+                        curContainer[1].innerText = `${payload[i].username} ${(payload[i].id === clientID) ? '(you)' : ''}`;
+    
+                    }
+                }
+            }
+        })
+    } catch(err) { 
+        globalHandler.log(JSON.stringify(err));
+    }
+}
+
 // Deafults to 600 unless updated by server
 let gameTime = 600;
 let gameTimers;
@@ -543,13 +585,13 @@ let gameTimers;
  * @version 1.0
  */
 function lookupID(id) {
-    console.log(id)
+    // console.log(id)
     if (clientID === id) {
         return `${username} (you)`;
     } else {
         let otherPlayer = otherPlayers.find(x=>x.client === id)
         if (otherPlayer !== undefined) {
-            console.log(otherPlayer)
+            // console.log(otherPlayer)
             return otherPlayer.username
         } else {
             return id;
@@ -580,6 +622,8 @@ function joinGame() {
         document.getElementById('loader').remove();
     }, 2500);
 
+    globalHandler.playMusic("valve_csgo_02/mainmenu.mp3");
+    globalHandler.playSFX("cs_stinger.wav");
 }
 
 /**
@@ -846,10 +890,21 @@ document.getElementById('chat-input').addEventListener('focus', (e) => {
 function dropSettings(elem) {
     let clientSettings = getSettings();
     elem.parentElement.parentElement.children[0].innerText = elem.innerText;
-    if (elem.parentElement.parentElement.children[0].id === 'settings-mouse-1') {
+    const idCheck = elem.parentElement.parentElement.children[0].id;
+    if (idCheck === 'settings-mouse-1') {
         clientSettings.mouse.invert = (elem.innerText === 'Yes') ? true : false;
-    } else if (elem.parentElement.parentElement.children[0].id === 'settings-dev-1') {
+    } else if (idCheck === 'settings-dev-1') {
         clientSettings.test.devMode = (elem.innerText === 'Yes') ? true : false;
+    } else if (idCheck === 'settings-video-1') {
+        clientSettings.rendering.shaders = (elem.innerText === 'Yes') ? true : false;
+    } else if (idCheck === 'settings-video-2') {
+        clientSettings.rendering.luminosity = (elem.innerText === 'Yes') ? true : false;
+    } else if (idCheck === 'settings-video-3') {
+        clientSettings.rendering.fxaa = (elem.innerText === 'Yes') ? true : false;
+    } else if (idCheck === 'settings-video-4') {
+        clientSettings.rendering.ssaa = (elem.innerText === 'Yes') ? true : false;
+    } else if (idCheck === 'settings-video-5') {
+        clientSettings.rendering.arrowHelpers = (elem.innerText === 'Yes') ? true : false;
     }
     saveSettings(clientSettings);
 }
@@ -878,14 +933,19 @@ const defaultSettings = {
         "reload": "KeyR"
     },
     "rendering": {  
-        "frameLimit": 60,
-        "arrowHelpers": false,
         "shaders": false,
+        "luminosity": false,
         "fxaa": false,
         "ssaa": false,
-        "luminosity": false,
+        "arrowHelpers": false,
         "sampling": 1,
+        "frameLimit": 60,
         "quality": window.devicePixelRatio
+    },
+    "audio": {
+        "master": 0.1,
+        "music": 0.5,
+        "sfx": 0.6
     },
     "test": {
         "devMode": true,

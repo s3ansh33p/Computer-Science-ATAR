@@ -232,7 +232,7 @@
                 try {
                     $.ajax({
                         url: '<%= type %>/api/friends/'+userid,
-                        timeout: 1500,
+                        timeout: 3000,
                         error: function () {
                             console.log('Friends API timed out.');
                         },

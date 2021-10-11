@@ -47,13 +47,22 @@ let gameTime = 0;
  * Holds the max game time
  * @constant {number}
  */
-const maxGameTime = 60;
+const maxGameTime = 900; // 15 mins
 /**
  * Holds the game time interval
  * @type {Function}
  */
 let gameTimers;
-
+/**
+ * Holds the game results data
+ * @type {Object[]}
+ */
+let gameResults = [];
+ /**
+ * Holds the gameID for db
+ * @type {number}
+ */
+let curGameID = 0;
 
 // Routing for static files such as the css styling and three.js files
 app.use(express.static(__dirname + '/public'));
@@ -77,6 +86,7 @@ const wss = new WebSocket.Server({ server });
 /**
  * @name ws
  * @property {string}  ws.id                  - The client's socket id or clientID
+ * @property {string}  ws.userID              - The client's id in the database
  * @property {object}  ws.gameData            - The client's game information
  * @property {number}  ws.gameData.kills      - The client's kills
  * @property {number}  ws.gameData.assists    - The client's assists
@@ -149,15 +159,15 @@ wss.on('connection', (ws) => {
             // Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
             let authcode = decodeClient(message.slice(1,5));
             if (authcode === '12345678') {
-                ws.userID = parseInt(decodeClient(message.slice(5)));
+                ws.userID = parseInt(message.slice(5));
                 
-                // connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
-                //     if (error) throw error;
-                //     if (results.length > 0) {
-                //         ws.userData.username = results[0].username;
-                //     }
-                // });
-                ws.userData.username = 'TMP';
+                connection.query('SELECT username FROM users WHERE id = ?', [ws.userID], function(error, results, fields) {
+                    if (error) throw error;
+                    if (results.length > 0) {
+                        ws.userData.username = results[0].username;
+                    }
+                });
+                // ws.userData.username = 'TMP';
 
             } else {
                 Logger.error(`Recieved invalid authentication from client "${ws.id}" | ${message.slice(1,5)}`);
@@ -180,6 +190,19 @@ wss.on('connection', (ws) => {
                         // Update kills and deaths for attacker and victim clients
                         ws.gameData.kills++;
                         client.gameData.deaths++;
+                        // Update gameResults data
+                        gameResults = [];
+                        wss.clients.forEach(function each(client) {
+                            gameResults.push({
+                                "id": client.id,
+                                "userid": client.userID,
+                                "username": client.userData.username,
+                                'kills': client.gameData.kills,
+                                'assists': client.gameData.assists,
+                                'deaths': client.gameData.deaths,
+                            })
+                        });  
+                        // console.log(JSON.stringify(gameResults))
                         wss.broadcast({'killer': encodeClient(ws.id), 'client':targetClient}, 8);
                         client.gameData.health = 100;
                         client.cooldown = true;
@@ -198,20 +221,29 @@ wss.on('connection', (ws) => {
 
     });
 
-    if (!gamerTimers && gameTime === 0) {
+    if (typeof gameTimers === 'undefined') {
         Logger.game("Creating new game");
-        gameTime = maxGameTime;
-        if (!gameTimers) {
-            gameTimers = setInterval(() => {
-                gameTime--;
-                if (gameTime === 0) {
-                    clearInterval(gameTimers);
-                    gameTimers = undefined;
-                    // Save the game data
-                    endGame()
+        connection.query('INSERT INTO games (duration, mode, map) VALUES ('+maxGameTime+',1,1)', function(error, results, fields) {
+            if (error) throw error;
+            Logger.mysql(`Created new game`)
+            connection.query('SELECT id from games ORDER BY id DESC LIMIT 1', function(error, results, fields) {
+                if (error) throw error;
+                if (results.length > 0) {
+                    curGameID = results[0].id
+                    Logger.mysql(`Set GameID to: ${curGameID}`)
                 }
-            }, 1000); // Timer 1s
-        }
+            });
+        });
+        gameTime = maxGameTime;
+        gameTimers = setInterval(() => {
+            gameTime--;
+            if (gameTime === 0) {
+                clearInterval(gameTimers);
+                gameTimers = undefined;
+                // Save the game data
+                endGame()
+            }
+        }, 1000); // Timer 1s
     }
 
     // Confirm that the client is connected and send them their client id and game time
@@ -236,9 +268,17 @@ wss.on('connection', (ws) => {
  */
 function endGame() {
     Logger.game("Game ended");
+    let sql = `INSERT INTO results (userid, gameid, kills, assists, deaths) VALUES`
     wss.clients.forEach(function each(client) {
         Logger.game(`Results for ${client.id} | Kills: ${client.gameData.kills} | Assists: ${client.gameData.assists} | Deaths: ${client.gameData.deaths} | Playing for ${client.userData.team ? 'Counter-Terrorists' : 'Terrorists'}`);
+        sql += ` (${client.userID},${curGameID},${client.gameData.kills},${client.gameData.assists},${client.gameData.deaths}),`;
     });            
+    sql = sql.slice(0,-1) + ';';
+    console.log(sql)
+    // connection.query(sql, function(error, results, fields) {
+    //     if (error) throw error;
+    //     Logger.mysql(`Inserted Game Results: ${curGameID}`)
+    // });
 }
 
 /**
@@ -299,7 +339,7 @@ wss.broadcast = function broadcast(msg, type) {
 
     } else if (type === 8) {
     
-        byteData.push(msg.client);
+        byteData.push(encodeClient(msg.client));
         byteData.push(msg.killer);
 
     } else {
@@ -383,6 +423,7 @@ app.get('/game', (req, res) => {
     if (req.session.loggedin || process.env.NODE_ENV === 'development') { // Skip auth if in development mode
         res.render(path.join(__dirname, '/views/game'), {
             title: 'Game',
+            type: runtime,
             session: req.session
         });
     } else {
@@ -496,14 +537,23 @@ app.get('/api/friends/:id', (req, res) => {
     Logger.API(`Retreiving friends for ID: ${req.params.id}`);
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {
         if (error) throw error;
+        res.header('Access-Control-Allow-Origin','*')
         res.json({'players':results});
         res.end();
     });
 })
 
+app.get('/api/game', (req, res) => {
+    Logger.API(`Retreiving current game data`);
+    res.header('Access-Control-Allow-Origin','*')
+    res.json(gameResults);
+    res.end();
+})
+
 app.get('/api/games/:id', (req, res) => {
     Logger.API(`Retreiving friends for ID: ${req.params.id}`);
     connection.query('SELECT u.id, u.username, u.curRank, r.kills, r.assists, r.deaths, g.startTime, g.duration, g.mode, g.map, g.winner FROM results r INNER JOIN users u ON r.userid = u.id INNER JOIN games g ON r.gameid = g.id WHERE r.gameid = ?', [req.params.id], function(error, results, fields) {
+        res.header('Access-Control-Allow-Origin','*')
         if (error) throw error;
             if (results.length > 0) {
             let json = {
@@ -540,6 +590,7 @@ app.get('/api/stats', (req, res) => {
     connection.query('SELECT COUNT(isOnline) AS userCount, COUNT(CASE WHEN isOnline = true THEN 1 END) AS onlineCount FROM users;', function(error, results, fields) {
         results = results[0];
         if (error) throw error;
+        res.header('Access-Control-Allow-Origin','*')
         res.json(results);
         res.end();
     });
@@ -552,6 +603,7 @@ app.get('/api/updates/:page', (req, res) => {
     // page defaults to 0 then 1 to get updates 6-10 etc.
     connection.query('SELECT u.avatar, u.username, u.isOnline, f.accepted from friends f INNER JOIN users u ON u.id = f.friendid WHERE f.userid = ? ORDER BY u.isOnline DESC', [req.params.id], function(error, results, fields) {
         if (error) throw error;
+        res.header('Access-Control-Allow-Origin','*')
         res.json({results});
         res.end();
     });

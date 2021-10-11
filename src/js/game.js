@@ -115,15 +115,17 @@ const listener = new THREE.AudioListener();
 camera.add( listener );
 
 const sound = new THREE.Audio( listener );
+const soundSFX = new THREE.Audio( listener );
+sound.setLoop( true );
 
 const audioLoader = new THREE.AudioLoader();
 // Load Audio
 let soundBuffers = [];
 function loadAudio() {
     let loadedTotal = 0;
-    let sounds = ['valve_csgo_01/mainmenu.mp3', 'valve_csgo_02/mainmenu.mp3', 'mainmenu.mp3'];
+    let sounds = ['mainmenu.mp3', 'cs_stinger.wav', 'deathcam.wav','kill.wav'];
     for (let i=0;i<sounds.length;i++) {
-        let item = `./assets/audio/music/${sounds[i]}`
+        let item = `./assets/audio/${sounds[i]}`
         audioLoader.load( item, function( buffer ) {
             soundBuffers.push({
                 "name": sounds[i],
@@ -150,18 +152,19 @@ function loadAudio() {
     }
 }
 
-audioLoader.load( `./assets/audio/music/mainmenu.mp3`, function( sb ) {
-    sound.setBuffer( sb );
-    sound.setLoop( false );
-    sound.setVolume( 0 );
-    // sound.play();
-});
-// setTimeout(() => {
-//     console.log(soundBuffers)
-//     sound.stop();
-//     sound.setBuffer( soundBuffers.find((x) => x.name == "valve_csgo_02/mainmenu.mp3").buffer );
-//     sound.play();
-// }, 6000);
+function playMusic(track) {
+    if (sound.isPlaying) sound.stop();
+    sound.setVolume( clientSettings.audio.music * clientSettings.audio.master );
+    sound.setBuffer( soundBuffers.find((x) => x.name == track).buffer );
+    sound.play();
+}
+
+function playSFX(track) {
+    if (soundSFX.isPlaying) soundSFX.stop();
+    soundSFX.setVolume( clientSettings.audio.sfx * clientSettings.audio.master );
+    soundSFX.setBuffer( soundBuffers.find((x) => x.name == track).buffer );
+    soundSFX.play();
+}
 
 const container = document.getElementById( 'container' );
 
@@ -421,8 +424,8 @@ document.addEventListener( 'click', (e) => {
                 const otherPlayerID = playerModels.map(e => e.id).indexOf(intersects[i].object.parent.parent.id);
                 if (otherPlayerID !== -1) {
                     if (globalHandler.otherPlayers()[otherPlayerID] !== undefined) {
-                        globalHandler.log("Collision with Player Mesh: " + JSON.stringify(intersects[i].point), "Damage"); 
-                        globalHandler.log(globalHandler.otherPlayers()[otherPlayerID].client, "Damage");
+                        // globalHandler.log("Collision with Player Mesh: " + JSON.stringify(intersects[i].point), "Damage"); 
+                        // globalHandler.log(globalHandler.otherPlayers()[otherPlayerID].client, "Damage");
                         sendData({
                             'data': {
                                 'clientID': globalHandler.otherPlayers()[otherPlayerID].client
@@ -430,10 +433,10 @@ document.addEventListener( 'click', (e) => {
                             'type': 'damage'
                         })
                     } else {
-                        globalHandler.log("Invalid playerID", "Damage")
+                        // globalHandler.log("Invalid playerID", "Damage")
                     }
                 } else {
-                    globalHandler.log("Invalid modelID", "Damage");
+                    // globalHandler.log("Invalid modelID", "Damage");
                 }
             } else if (getSettings().rendering.arrowHelpers) {
                 arrowHelpers.push(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, intersects[i].distance, 0xff0000));
@@ -763,6 +766,26 @@ for (let i=1; i<4; i++) {
         saveSettings(clientSettings);
     }); 
 } 
+// Create listeners for audio
+for (let i=0; i<3; i++) {
+    document.getElementById(`settings-volume-${i+1}`).addEventListener("change", (e) => {
+        e.preventDefault();
+        let curProps = Object.getOwnPropertyNames(clientSettings.audio);
+        clientSettings.audio[curProps[i]] = parseInt(e.target.value)/100
+        sound.setVolume( clientSettings.audio.music * clientSettings.audio.master );
+        soundSFX.setVolume( clientSettings.audio.sfx * clientSettings.audio.master );
+        saveSettings(clientSettings);
+    }); 
+} 
+
+// Create listeners for video
+for (let i=5; i<7; i++) {
+    document.getElementById(`settings-video-${i+1}`).addEventListener("change", (e) => {
+        let curProps = Object.getOwnPropertyNames(clientSettings.rendering);
+        clientSettings.rendering[curProps[i]] = parseInt(e.target.value)
+        saveSettings(clientSettings);
+    }); 
+}
 
 /**
  * Updates settings UI to default values
@@ -791,6 +814,19 @@ function renderMainSettings(fetchNew = false) {
     document.getElementById(`settings-dev-1`).innerText = (clientSettings.test[curProps[0]]) ? 'Yes' : 'No';
     for (let i=1; i<4; i++) {
         document.getElementById(`settings-dev-${i+1}`).value = clientSettings.test[curProps[i]];
+    }
+    // Audio
+    curProps = Object.getOwnPropertyNames(clientSettings.audio);
+    for (let i=0; i<3; i++) {
+        document.getElementById(`settings-volume-${i+1}`).value = Math.round(clientSettings.audio[curProps[i]]*10000)/100;   
+    }
+     // Video
+    curProps = Object.getOwnPropertyNames(clientSettings.rendering);
+    for (let i=0; i<5; i++) {
+        document.getElementById(`settings-video-${i+1}`).innerText = (clientSettings.rendering[curProps[i]]) ? 'Yes' : 'No';
+    }
+    for (let i=5; i<7; i++) {
+        document.getElementById(`settings-video-${i+1}`).value = clientSettings.rendering[curProps[i]];   
     }
     // Render Crosshair
     renderCrosshair(clientSettings.crosshair.offset, clientSettings.crosshair.cLength, clientSettings.crosshair.cWidth, `rgb(${clientSettings.crosshair.r}, ${clientSettings.crosshair.g}, ${clientSettings.crosshair.b})`)
@@ -942,12 +978,18 @@ function animate() {
     
     stats.update();
 
+    let msLimit = 0
+    if (getSettings().rendering.frameLimit !== 60) {
+        msLimit = 1/getSettings().rendering.frameLimit*1000;
+    }
+
     setTimeout( function() {
 
         requestAnimationFrame( animate );
         composer.render();
+        console.log(msLimit)
 
-    }, 1/(getSettings().rendering.frameLimit === 60) ? 1 : getSettings().rendering.frameLimit*1000 );
+    }, msLimit);
 
 }
 
@@ -962,8 +1004,7 @@ window.globalHandler = window.globalHandler || {};
 /**
  * A variable in globalHandler (globalHandler.playerData)
  * @author      Sean McGinty <newfolderlocation@gmail.com>
- * @method
- * @returns     {void}
+ * @type        {Object[]}
  * @version     1.0
  */
 globalHandler.playerData = playerData;
@@ -1014,22 +1055,12 @@ globalHandler.showStats = (enabled) => showStats(enabled);
 globalHandler.loadPlayer = () => loadPlayerModel();
 
 /**
- * An object to store the player models
+ * A function in globalHandler (globalHandler.playerModels)
  * @author      Sean McGinty <newfolderlocation@gmail.com>
- * @method
- * @returns     {void}
+ * @type        {Object[]}
  * @version     1.0
  */
 globalHandler.playerModels = playerModels;
-
-/**
- * An object to store the properties of the main sound
- * @author      Sean McGinty <newfolderlocation@gmail.com>
- * @method
- * @returns     {void}
- * @version     1.0
- */
-globalHandler.sound = sound;
 
 /**
  * An object to store the properties of the game
@@ -1085,12 +1116,14 @@ globalHandler.gameEndScreen = () => {
  * @version     1.0
  */
 globalHandler.reload = () => reloadAmmo();
+// Add reload bind
 addKeyBind(() => {globalHandler.reload()}, clientSettings.game.reload);
 
 /**
  * A function in globalHandler (globalHandler.wireframe) 
  * @author      Sean McGinty <newfolderlocation@gmail.com>
  * @method
+ * @param       {bool} enabled If the wireframe is enabled
  * @returns     {void}
  * @version     1.0
  */
@@ -1100,16 +1133,28 @@ globalHandler.wireframe = (enabled) => enableWireframe(enabled);
  * A function in globalHandler (globalHandler.renderMainSettings) 
  * @author      Sean McGinty <newfolderlocation@gmail.com>
  * @method
+ * @param       {bool} fetchNew If the settings are updated
  * @returns     {void}
  * @version     1.0
  */
 globalHandler.renderMainSettings = (fetchNew) => renderMainSettings(fetchNew);
 
  /**
- * A function in globalHandler (globalHandler.renderMainSettings) 
+ * A function in globalHandler (globalHandler.playSFX) 
  * @author      Sean McGinty <newfolderlocation@gmail.com>
  * @method
+ * @param       {string} track The relative path of the audio track
  * @returns     {void}
  * @version     1.0
  */
-globalHandler.spawn = () => spawn();
+globalHandler.playSFX = (track) => playSFX(track);
+
+ /**
+ * A function in globalHandler (globalHandler.playMusic) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @param       {string} track The relative path of the audio track
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.playMusic = (track) => playMusic(track);

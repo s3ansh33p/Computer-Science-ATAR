@@ -235,48 +235,106 @@
                                 <input type="range" class="form-range" min="0" max="100" id="settings-volume-3">
                             </div>
                         </div>
-                        <div class="row align-items-center mb-2">
-                            <div class="col-xs-12 col-sm-6">
-                                <h5 class="m-0">Audio Output Configuration</h5> 
-                            </div>
-                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
-                                <div class="dropdown text-white">
-                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownSettings1" data-bs-toggle="dropdown" aria-expanded="false">
-                                      STEREO HEADPHONES
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownSettings1">
-                                      <li class="dropdown-item cursor-pointer">STEREO HEADPHONES</li>
-                                      <li class="dropdown-item cursor-pointer">[AUTO POPULATE]</li>
-                                    </ul>
-                                  </div>
-                            </div>
-                        </div>
-                        <div class="row align-items-center mb-2">
-                            <div class="col-xs-12 col-sm-6">
-                                <h5 class="m-0">Play Audio When Game Not Focused</h5> 
-                            </div>
-                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
-                                <div class="dropdown text-white">
-                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownSettings1" data-bs-toggle="dropdown" aria-expanded="false">
-                                      Yes
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownSettings1">
-                                      <li class="dropdown-item cursor-pointer">Yes</li>
-                                      <li class="dropdown-item cursor-pointer">No</li>
-                                    </ul>
-                                  </div>
-                            </div>
-                        </div>
-                        <h4 class="mb-2 mt-5">Music</h4>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="settings-video" role="tabpanel" aria-labelledby="settings-video-tab">
-                    <div class="row">
-                        <div class="col-6">
-                            <p>Settings Menu Goes Here</p> 
+                    <div class="container">
+                        <h4 class="mb-2">Video</h4>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable Shaders</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-video-1" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-video-1">
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <p>Settings Menu Goes Here</p>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable Luminosity Pass</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-video-2" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-video-2">
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable FXAA</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-video-3" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-video-3">
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable SSAA</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-video-4" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-video-4">
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Enable Helpers</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex justify-content-end">
+                                <div class="dropdown text-white">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="settings-video-5" data-bs-toggle="dropdown" aria-expanded="false">
+                                      Yes
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="settings-video-5">
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">Yes</li>
+                                      <li class="dropdown-item cursor-pointer" onclick="dropSettings(this)">No</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Shader Sampling</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="1" max="5" step="1" id="settings-video-6">
+                            </div>
+                        </div>
+                        <div class="row align-items-center mb-2">
+                            <div class="col-xs-12 col-sm-6">
+                                <h5 class="m-0">Frame Limit</h5> 
+                            </div>
+                            <div class="col-xs-12 col-sm-6 d-flex align-items-center">
+                                <input type="range" class="form-range" min="1" max="60" step="1" id="settings-video-7">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -295,7 +353,7 @@
                 <img src="./assets/cog.svg">
             </div>
             <div class="my-4 py-2 cursor-pointer" id="gameMenu-2">
-                <img src="./assets/tick.svg">
+                <!-- <img src="./assets/tick.svg"> -->
             </div>
         </div>
         <div class="my-4 pb-2 cursor-pointer" id="gameMenu-3">
