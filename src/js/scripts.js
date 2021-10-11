@@ -283,6 +283,8 @@ server.onmessage = function (event) {
                     function loaded() {
                         globalHandler.playerData.team = team;
                         globalHandler.log('All critical data loaded successfully');
+                        // Update tab menu stats
+                        getGameData();
                         let curSettings = getSettings();
                         if (curSettings.rendering.frameLimit < 30) globalHandler.log(`Low frame limit can lead to collision issues. Found value ${curSettings.rendering.frameLimit}`, "System")
                         if (curSettings.rendering.fxaa) {
