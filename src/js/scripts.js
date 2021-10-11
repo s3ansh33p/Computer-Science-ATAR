@@ -116,7 +116,7 @@ let clientID = '';
 
  /**
  * Tracks if the client is 'dead'
- * @type {bool}
+ * @type {boolean}
  */
 let isDead = false;
 
@@ -542,6 +542,12 @@ server.onopen = function () {
     setInterval(ping, 30000);
 }
 
+/**
+ * Fetches and renders the current game data via the game API
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
 function getGameData() {
     try {
         $.ajax({
@@ -575,8 +581,15 @@ function getGameData() {
     }
 }
 
-// Deafults to 600 unless updated by server
+/**
+ * Holds the game time remaining
+ * @type {number}
+ */
 let gameTime = 600;
+/**
+ * Holds the game time interval
+ * @type {Function}
+ */
 let gameTimers;
 
 /**
@@ -778,7 +791,6 @@ function resetSettings() {
  * @returns {Object} settings The settings encoded in JSON
  * @version 1.0
  */
-
 function getSettings() {
     if (localStorage) {
         var savedSettings = localStorage.getItem('userSettings');
@@ -823,12 +835,24 @@ function removeKeyBind(code) {
     return false;
 }
 
+/**
+ * Holds keybind data
+ * @type {Object[]}
+ */
 let keybinds = [];
+/**
+ * Holds keybind data
+ * @alias keybinds
+ */
 const binds = keybinds;
+/**
+ * Holds keys that are 'special' for keyboard events
+ * @type {String[]}
+ */
 const specialKeys = ["Tab", "Escape"];
 
 /**
- * Run the associated function with a keybid
+ * Run the associated function with a keybind
  * @author  Sean McGinty <newfolderlocation@gmail.com>
  * @param   {KeyboardEvent} e The keyboard event from the event listener
  * @returns {void}
@@ -885,10 +909,18 @@ document.body.addEventListener('keydown', (e) => {
     }
 })
 
+// Typing listener
 document.getElementById('chat-input').addEventListener('focus', (e) => {
     if (!typing) typing = true;
 });
 
+/**
+ * Listeners for dropdown elements in the settings UI
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {Element} elem The function caller (element using .this)
+ * @returns {void}
+ * @version 1.0
+ */
 function dropSettings(elem) {
     let clientSettings = getSettings();
     elem.parentElement.parentElement.children[0].innerText = elem.innerText;
@@ -912,6 +944,51 @@ function dropSettings(elem) {
     saveSettings(clientSettings);
 }
 
+/**
+ * @name defaultSettings
+ * @property {object}  defaultSettings.movement                 - Movement Object
+ * @property {string}  defaultSettings.movement.forward         - Movement Forward KeyBind
+ * @property {string}  defaultSettings.movement.left            - Movement Left KeyBind
+ * @property {string}  defaultSettings.movement.right           - Movement Right KeyBind
+ * @property {string}  defaultSettings.movement.backward        - Movement Backward KeyBind
+ * @property {string}  defaultSettings.movement.jump            - Movement Jump KeyBind 
+ * @property {object}  defaultSettings.mouse                    - Mouse Object
+ * @property {number}  defaultSettings.mouse.sensitivity        - Mouse Sensitivity
+ * @property {boolean} defaultSettings.mouse.invert             - Is Mouse Inverted
+ * @property {object}  defaultSettings.crosshair                - Crosshair Object
+ * @property {number}  defaultSettings.crosshair.x              - Crosshair Offset
+ * @property {number}  defaultSettings.crosshair.y              - Crosshair Length
+ * @property {number}  defaultSettings.crosshair.z              - Crosshair Width
+ * @property {number}  defaultSettings.crosshair.rotation       - Crosshair R Color
+ * @property {number}  defaultSettings.crosshair.rotation       - Crosshair G Color
+ * @property {number}  defaultSettings.crosshair.rotation       - Crosshair B Color
+ * @property {object}  defaultSettings.game                     - Game Object
+ * @property {string}  defaultSettings.game.reload              - Game Reload KeyBind
+ * @property {object}  defaultSettings.rendering                - Rendering Object
+ * @property {boolean} defaultSettings.rendering.shaders        - Are Shaders Enabled
+ * @property {boolean} defaultSettings.rendering.luminosity     - Is Luminosity Pass Enabled
+ * @property {boolean} defaultSettings.rendering.fxaa           - Is FXAA Pass Enabled
+ * @property {boolean} defaultSettings.rendering.ssaa           - Is SSAA Pass Enabled
+ * @property {boolean} defaultSettings.rendering.arrowHelpers   - Are Arrow Helpers Enabled
+ * @property {number}  defaultSettings.rendering.sampling       - Rendering Sampling Size
+ * @property {number}  defaultSettings.rendering.frameLimit     - Rendering Framelimit
+ * @property {number}  defaultSettings.rendering.quality        - Rendering Quality
+ * @property {object}  defaultSettings.audio                    - Audio Object
+ * @property {number}  defaultSettings.audio.master             - Audio Master Volume
+ * @property {number}  defaultSettings.audio.music              - Audio Music Volume
+ * @property {number}  defaultSettings.audio.sfx                - Audio SFX Volume
+ * @property {object}  defaultSettings.test                     - Developer Object
+ * @property {boolean} defaultSettings.test.devMode             - Is Developer Mode Enabled
+ * @property {string}  defaultSettings.test.dev                 - Developer Wireframe KeyBind
+ * @property {string}  defaultSettings.test.stats               - Developer Stats KeyBind
+ * @property {string}  defaultSettings.test.key                 - Developer Test KeyBind
+ * @property {object}  defaultSettings.ui                       - UI Object
+ * @property {string}  defaultSettings.ui.scores                - UI Scores KeyBind
+ * @property {object}  defaultSettings.ui.chat                  - UI Chat Object
+ * @property {string}  defaultSettings.ui.chat.open             - UI Chat Open KeyBind
+ * @property {string}  defaultSettings.ui.chat.close            - UI Chat Close KeyBind
+ * @property {string}  defaultSettings.ui.sidemenu              - UI Sidemenu KeyBind
+ */
 const defaultSettings = {
     "movement": {
         "forward": "KeyW",
@@ -966,6 +1043,16 @@ const defaultSettings = {
     }
 }
 
+/**
+ * Renders a crosshair in both the settings UI and in the game
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @param   {number} offset The offset from the center for the outer lines
+ * @param   {number} length The length of each crosshair line
+ * @param   {number} width The width of each crosshair line
+ * @param   {string} color The color of the crosshair
+ * @returns {void}
+ * @version 1.0
+ */
 function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') {
     function render() {
         // Color
@@ -990,8 +1077,17 @@ function renderCrosshair(offset = 15, length = 50, width = 5, color = 'yellow') 
     render()
 }
 
+/**
+ * Tracks if the dev Wireframe UI is enabled
+ * @type {boolean}
+ */
 let wireframeOn = false;
+/**
+ * Tracks if the dev Stats UI is enabled
+ * @type {boolean}
+ */
 let statsOn = false;
+
 // Map binds
 addKeyBind(() => {if (getSettings().test.devMode) {globalHandler.log("Triggered Test Bind", "Debug")}}, getSettings().test.key);
 addKeyBind(showScoresMenu, getSettings().ui.scores);
@@ -1022,8 +1118,18 @@ function toggleSideMenu() {
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
 document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
+/**
+ * Tracks if the cursor/pointer is locked
+ * @type {boolean}
+ */
 let locked = false;
 
+/**
+ * Pointer lock handler
+ * @author  Sean McGinty <newfolderlocation@gmail.com>
+ * @returns {void}
+ * @version 1.0
+ */
 function lockChangeAlert() {
   if (document.pointerLockElement === document.body ||
       document.mozPointerLockElement === document.body) {

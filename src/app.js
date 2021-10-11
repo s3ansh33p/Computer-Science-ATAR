@@ -10,6 +10,12 @@ const { exec } = require("child_process");
 const Logger = require('./Logger');
 
 const app = express();
+
+/**
+ * MySQL connection
+ * @constant {Object} connection new connection using the mysql library
+ * @see https://github.com/mysqljs/mysql
+ */
 const connection = mysql.createConnection({
 	host     : process.env.MYSQL_HOST || 'localhost',
 	user     : process.env.MYSQL_USERNAME || 'root',
@@ -80,7 +86,18 @@ app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 
 // Web Socket and Initialization
+
+/**
+ * HTTP/S Server
+ * @const server
+ * @see https://nodejs.org/api/http.html#http_class_http_server
+ */
 const server = http.createServer(app);
+/**
+ * Websocket Server
+ * @const wss
+ * @see https://github.com/websockets/ws
+ */
 const wss = new WebSocket.Server({ server });
 
 /**
@@ -235,6 +252,7 @@ wss.on('connection', (ws) => {
             });
         });
         gameTime = maxGameTime;
+        // Game loop handler
         gameTimers = setInterval(() => {
             gameTime--;
             if (gameTime === 0) {
@@ -256,7 +274,6 @@ wss.on('connection', (ws) => {
      });
 
     wss.broadcast(activePlayers, 2)
-    // On active players, send positions?
 
 });
 
@@ -271,6 +288,7 @@ function endGame() {
     let sql = `INSERT INTO results (userid, gameid, kills, assists, deaths) VALUES`
     wss.clients.forEach(function each(client) {
         Logger.game(`Results for ${client.id} | Kills: ${client.gameData.kills} | Assists: ${client.gameData.assists} | Deaths: ${client.gameData.deaths} | Playing for ${client.userData.team ? 'Counter-Terrorists' : 'Terrorists'}`);
+        // SQL query builder
         sql += ` (${client.userID},${curGameID},${client.gameData.kills},${client.gameData.assists},${client.gameData.deaths}),`;
     });            
     sql = sql.slice(0,-1) + ';';
@@ -596,7 +614,7 @@ app.get('/api/stats', (req, res) => {
     });
 })
 
-
+// Not implemented
 app.get('/api/updates/:page', (req, res) => {
     Logger.API(`Retreiving updates for ID: ${req.params.id}`);
     // Get the most recent updates
