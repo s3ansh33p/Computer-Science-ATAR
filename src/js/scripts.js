@@ -622,7 +622,7 @@ function joinGame() {
         document.getElementById('loader').remove();
     }, 2500);
 
-    globalHandler.playMusic("valve_csgo_02/mainmenu.mp3");
+    globalHandler.playMusic("mainmenu.mp3");
     globalHandler.playSFX("cs_stinger.wav");
 }
 
@@ -1085,7 +1085,3 @@ globalHandler.getSettings = () => getSettings();
  * @version     1.0
  */
 globalHandler.otherPlayers = () => {return otherPlayers};
-
-setTimeout(() => {
-    resetSettings();
-}, 4000);

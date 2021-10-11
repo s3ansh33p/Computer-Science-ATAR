@@ -987,7 +987,6 @@ function animate() {
 
         requestAnimationFrame( animate );
         composer.render();
-        console.log(msLimit)
 
     }, msLimit);
 
