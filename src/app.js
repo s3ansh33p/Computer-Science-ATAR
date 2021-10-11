@@ -145,7 +145,7 @@ wss.on('connection', (ws) => {
 
         } else if (message[0] === 1) {
 
-            // Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
+            Logger.game(`Recieved message from client "${ws.id}" | ${message.slice(1,201)}`);
             wss.broadcast({'message':message.slice(1,201),'client':ws.id}, 3)
 
         } else if (message[0] === 2 && gameTimers) {
@@ -156,7 +156,7 @@ wss.on('connection', (ws) => {
 
         } else if (message[0] === 3) {
 
-            // Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
+            Logger.game(`Recieved authentication from client "${ws.id}" | ${message.slice(1)}`);
             let authcode = decodeClient(message.slice(1,5));
             if (authcode === '12345678') {
                 ws.userID = parseInt(message.slice(5));
@@ -275,10 +275,10 @@ function endGame() {
     });            
     sql = sql.slice(0,-1) + ';';
     console.log(sql)
-    // connection.query(sql, function(error, results, fields) {
-    //     if (error) throw error;
-    //     Logger.mysql(`Inserted Game Results: ${curGameID}`)
-    // });
+    connection.query(sql, function(error, results, fields) {
+        if (error) throw error;
+        Logger.mysql(`Inserted Game Results: ${curGameID}`)
+    });
 }
 
 /**
