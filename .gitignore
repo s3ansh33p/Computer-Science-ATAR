@@ -4,8 +4,8 @@ node_modules/
 # Ignore the build directory
 /dist
 
-# The file containing environment variables - for some reason this does not work??
+# The file containing environment variables
 **/.env
 
-# Audio - will be hosted on server
-src/assets/audio/music
+# package-lock.json
+package-lock.json
