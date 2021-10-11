@@ -47,7 +47,7 @@ let gameTime = 0;
  * Holds the max game time
  * @constant {number}
  */
-const maxGameTime = 900; // 15 mins
+const maxGameTime = 300; // 5 mins
 /**
  * Holds the game time interval
  * @type {Function}
