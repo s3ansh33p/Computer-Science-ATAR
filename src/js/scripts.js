@@ -895,6 +895,7 @@ function dropSettings(elem) {
         clientSettings.mouse.invert = (elem.innerText === 'Yes') ? true : false;
     } else if (idCheck === 'settings-dev-1') {
         clientSettings.test.devMode = (elem.innerText === 'Yes') ? true : false;
+        document.getElementById('debug').innerHTML = '';
     } else if (idCheck === 'settings-video-1') {
         clientSettings.rendering.shaders = (elem.innerText === 'Yes') ? true : false;
     } else if (idCheck === 'settings-video-2') {
@@ -948,7 +949,7 @@ const defaultSettings = {
         "sfx": 0.6
     },
     "test": {
-        "devMode": true,
+        "devMode": false,
         "dev": "KeyQ",
         "stats": "KeyE",
         "key": "KeyX"
