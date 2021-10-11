@@ -1157,3 +1157,12 @@ globalHandler.playSFX = (track) => playSFX(track);
  * @version     1.0
  */
 globalHandler.playMusic = (track) => playMusic(track);
+  
+ /**
+ * A function in globalHandler (globalHandler.spawn) 
+ * @author      Sean McGinty <newfolderlocation@gmail.com>
+ * @method
+ * @returns     {void}
+ * @version     1.0
+ */
+globalHandler.spawn = () => spawn();
